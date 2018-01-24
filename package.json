@@ -1,0 +1,11 @@
+{
+  "name": "chipshop",
+  "version": "1.0.0",
+  "description": "Web based chiptune player",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "author": "",
+  "license": "ISC"
+}
