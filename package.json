@@ -4,8 +4,25 @@
   "description": "Web based chiptune player",
   "main": "index.js",
   "scripts": {
-    "test": "npm test"
+    "build": "webpack",
+    "dev": "webpack --watch",
+    "test": "mocha-webpack --webpack-config webpack-test.config.js",
+    "test:all": "mocha-webpack --require ./test/setupTest.js --webpack-config webpack-test.config.js 'test/unit/**/*.js'",
+    "test:watch": "npm run test:all -- --watch"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "4.1.2",
+    "filereader": "^0.10.3",
+    "jsdom": "11.6.2",
+    "jsdom-global": "3.0.2",
+    "mocha": "4.1.0",
+    "mocha-webpack": "1.0.1",
+    "sinon": "4.4.2",
+    "xhr2": "^0.1.4"
+  },
+  "dependencies": {
+    "webpack": "^3.11.0"
+  }
 }

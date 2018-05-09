@@ -1,29 +1,32 @@
-import Player from "Player";
-import ProtrackerChannel from "ProtrackerChannel";
-import * as reader from "ProtrackerReader";
+import Player from "../Player";
+import ProtrackerChannel from "./ProtrackerChannel";
+import * as reader from "./ProtrackerReader";
 
-class Protracker extends Player {
+export default class Protracker extends Player {
     constructor(audioContext, fileData) {
         super(audioContext, fileData);
 
-        // We'll use this to actually output the sound
-        this.bufferLength        = 4096;
-        this.scriptProcessorNode = audioContext.createScriptProcessor(4096, 0, 2);
+        this.amigaClockSpeed     = this._setAmigaClock('PAL');
+        this.buffer              = audioContext.createBuffer(2, audioContext.sampleRate, audioContext.sampleRate);
+        this.bufferSourceNode    = audioContext.createBufferSource();
+        this.channels            = this._createChannels(reader.getChannelCount(fileData));
+        this.scriptProcessorNode = audioContext.createScriptProcessor(undefined, 1, 2);
 
         // Get all of the read-only properties of the song from the file
         Object.assign(this.song, {
             channelCount:    reader.getChannelCount(fileData),
             patternCount:    reader.getPatternCount(fileDate),
-            signature:       reader.getSignature(fileData),
-            title:           reader.getTitle(fileData),
-            patternSequence: reader.getPatternSequence(fileData),
             patterns:        reader.getPatterns(fileData),
+            patternSequence: reader.getPatternSequence(fileData),
             samples:         reader.getSamples(fileData),
+            signature:       reader.getSignature(fileData),
+            songLength:      reader.getUsedPatternSequenceLength(fileData),
+            songLoop:        reader.getSongLoopPatternSequenceIndex(fileData),
+            title:           reader.getTitle(fileData),
         });
 
         // Set all of the variables used during playback
         this.state = Object.assign(this.state, {
-            channels:                    this._createChannels(this.song.channelCount),
             currentBufferSamplePosition: 0,
             currentPatternIndex:         0,
             currentRowIndex:             0,
@@ -35,176 +38,205 @@ class Protracker extends Player {
             ticksPerRow:                 0,
         });
 
-        this.api = Object.assign(this.api, {
+        // Set up audioContext / audio nodes
+        this._setupAudioNodes();
 
-        });
+        // Set up the API (stops access to private functions)
+        // this.api = Object.assign(this.api, {
+        //     getChannels:      this.getChannels.bind(this),
+        //     getPlaybackState: this.getPlaybackState.bind(this),
+        //     getSongInfo:      this.getSongInfo.bind(this),
+        //     nextPattern:      this.nextPattern.bind(this),
+        //     nextRow:          this.nextRow.bind(this),
+        //     nextSubtrack:     this.nextSubtrack.bind(this),
+        //     nextTick:         this.nextTick.bind(this),
+        //     previousPattern:  this.nextPattern.bind(this),
+        //     previousRow:      this.previousRow.bind(this),
+        //     previousSubtrack: this.previousSubtrack.bind(this),
+        //     previousTick:     this.previousTick.bind(this),
+        //     pause:            this.pause.bind(this),
+        //     play:             this.play.bind(this),
+        //     reset:            this.reset.bind(this),
+        //     setAmigaClock:    this.setAmigaClock.bind(this),
+        //     setPattern:       this.setPattern.bind(this),
+        //     setRow:           this.setRow.bind(this),
+        //     setSubtrack:      this.setSubtrack.bind(this),
+        //     setTick:          this.setTick.bind(this),
+        // });
+
+        this.api = this._getPublicApi();
+        return this.api;
     };
 
 
     /****************************
      *     Public functions     *
      ****************************/
+    getChannels() {
+        return this.channels;
+    };
+
+    getPlaybackState() {
+        return this.state;
+    };
+
     getSongInfo() {
         return this.song;
     };
 
-    goToNextPattern() {
+    nextPattern() {
         return this._setPatternIndex(this.state.currentPatternIndex + 1);
     };
 
-    goToNextSubtrack() {
+    nextRow() {
+        if(this._setRow(this.state.currentRowIndex + 1) === false) {
+            return this._nextPattern();
+        }
+        return true;
+    };
+
+    nextSubtrack() {
         if(this.song.hasSubtracks) {
             return this.goToSubtrack(this.state.currentSubtrack + 1);
         }
         return false;
     };
 
-    goToNextTick() {
+    nextTick() {
         if(this._setTick(this.state.currentTick + 1) === false) {
-            return this._goToNextRow();
+            return this._nextRow();
         }
         return true;
     };
 
-    goToNextRow() {
-        if(this._setRow(this.state.currentRowIndex + 1) === false) {
-            return this._goToNextPattern();
-        }
-        return true;
-    };
-
-    goToPreviousPattern() {
+    previousPattern() {
         this._setPatternIndex(this.state.currentPatternIndex - 1);
     };
 
-    goToPreviousRow() {
+    previousRow() {
         if(this._setRow(this.state.currentRowIndex - 1) === false) {
-            return this._goToPreviousPattern();
+            return this._previousPattern();
         }
         return true;
     };
 
-    goToPreviousSubtrack() {
+    previousSubtrack() {
         if(this.song.hasSubtracks) {
             return this.goToSubtrack(this.state.currentSubtrack - 1);
         }
         return false;
-    }
+    };
 
-    goToPreviousTick() {
+    previousTick() {
         if(this._setTick(this.state.currentTick - 1) === false) {
-            return this._goToPreviousRow();
+            return this._previousRow();
         }
         return true;
-    }
-
-    goToSubtrack(index) {
-        if(this.song.hasSubtracks) {
-            // FIXME
-        }
-        return false;
     };
 
     pause() {
-
+        this.bufferSourceNode.stop();
     };
 
     play() {
-
+        this.bufferSourceNode.start();
     };
 
     reset() {
-        var i;
-
         this._setPatternIndex(0);
-        for(i=0; i<this.state.channels.length; i++) {
-            this.state.channels[i].reset();
+        this.channels.forEach(channel => {
+            channel.reset();
+        });
+    };
+
+    setAmigaClock(region) {
+        if(typeof region === 'string') {
+            if(region.toUpperCase() === 'PAL') {
+                this.amigaClockSpeed = 7093789.2;
+            }
+            else if(region.toUpperCase === 'NTSC') {
+                this.amigaClockSpeed = 7159090.5;
+            }
         }
+        return this.amigaClockSpeed;
+    };
+
+    setPattern() {
+
+    };
+
+    setRow(row) {
+
+    };
+
+    setSubtrack(index) {
+
     };
 
     setTick(tick) {
 
-    }
-
-    skipToPosition() {
-
     };
-
-    stop() {
-        this.pause();
-        this.reset();
-        this.state.status = 'STOPPED';
-    }
 
 
     /***************************
      *     Event functions     *
      ***************************/
     onAudioProcess(event) {
-        var bufferStart = 0;
-        var i;
-        var previousSongPosition = this._getSongPosition(this.song, this.state);
-        var samplesToGenerate = 0;
-        var tickFinished = false;
+        const samplesToGenerate = this._calculateNumberOfSamplesToGenerate();
 
-        // If this is the start of a row, process the song-level effects
-        if(this.state.currentTick === 0 && this.state.currentTickSamplePosition === 0) {
-            for(i=0; i<channels.length; i++) {
-                this.state = this.processSongLevelEffect(
-                    this.song,
-                    this.state,
-                    this._getCurrentRow(this.song, this.state)[i]
-                );
+        // If this is the start of a new row, assign instruction data to channels
+        if(this.state.currentRowIndex === 0 && this.currentTick === 0 && this.state.currentTickSamplePosition === 0) {
+            this.channels.forEach((channel, index) => {
+                let instruction = this._getCurrentRow()[index];
 
-                // If the song position has changed, we need to start this function again from the beginning
-                if(this.previousSongPosition !== this._getSongPosition(this.state)) {
-                    return this.onAudioProcess(event);
+                if(instruction.effect) {
+                    channel.setEffect(instruction.effect);
                 }
-            }
+                if(instruction.finetune) {
+                    channel.setFinetune(instruction.finetune);
+                }
+                if(instruction.period) {
+                    channel.setPeriod(instruction.period);
+                }
+                if(instruction.sampleIndex) {
+                    // A sampleIndex of 0 means no sample specified, which means that
+                    // Effectively, the samples coming from the instructions are 1-based.
+                    // We have to handle this as the sample array is 0-based.
+                    channel.setSample(this.samples(instruction.sampleIndex - 1));
+                }
+            });
         }
 
-        // Figure out how many samples we need to generate
-        samplesToGenerate = Math.min(
-            this.bufferLength,
-            this.state.samplesPerTick - this.state.currentTickSamplePosition
-        );
+        // If this is the start of a tick, process effects for each channel
+        if(this.state.currentTickSamplePosition === 0) {
+            this.channels.forEach(channel => {
+                if(channel.getEffect() !== null) {
+                    channel.getEffect().process(this, channel);
+                }
+            });
+        }
 
         // Get channels to fill their buffers
-        for(i=0; i<this.state.channels.length; i++) {
-            this.state.channels[i].fillBuffer(this.state.currentBufferSamplePosition, samplesToGenerate);
-        }
+        this.channels.forEach(channel => {
+            channel.fillBuffer(this.state.currentBufferSamplePosition, samplesToGenerate);
+        });
 
         // Record that we have generated our samples
         this.state.currentTickSamplePosition = this.state.currentTickSamplePosition + samplesToGenerate;
         this.state.currentBufferSamplePosition = this.state.currentBufferSamplePosition + samplesToGenerate;
 
         // If the tick has ended, advance to the next position
-        if(this.state.currentTickSamplePosition + 1 === this.state.samplesPerTick) {
-            this.state = this._goToNextTick(this.song, this.state);
+        if(this.state.currentTickSamplePosition === this.state.samplesPerTick) {
+            this._goToNextPosition();
         }
 
         // If we need to generate more samples to fully fill the buffers, restart function
-        if(this.state.currentBufferSamplePosition + 1 !== this.bufferLength) {
-            return this.onAudioProcess(event);
+        if(this.state.currentBufferSamplePosition !== this.scriptProcessorNode.bufferSize) {
+            this.onAudioProcess(event);
         }
-
-        // Now merge the channel audio data together into the scriptProcesorNode
-        if(this.songInfo.channelCount === 4) {
-            // Left audio channel
-            for(i=0; i<this.bufferLength; i++) {
-                // FIXME
-                var output = event.outputBuffer.getChannelData(0);
-                output[i] = (this.state.channels[0].bufferData[i] + this.state.channels[3].bufferData[i]) / 2;
-            }
-            // Right audio channel
-            for(i=0; i<this.bufferLength; i++) {
-                // FIXME
-                var output = event.outputBuffer.getChannelData(1);
-                output[i] = (this.state.channels[1].bufferData[i] + this.state.channels[2].bufferData[i]) / 2;
-            }
-        }
+        // Otherwise, downmix the channels to stereo (2 channels in the scriptProcessorNode)
         else {
-            // 8 channel song... ?
+            this._mergeChannelsToOutput(event.outputBuffer);
         }
     };
 
@@ -212,12 +244,23 @@ class Protracker extends Player {
     /*****************************
      *     Private functions     *
      *****************************/
+    _calculateNumberOfSamplesToGenerate() {
+        return Math.min(
+            this.scriptProcessorNode.bufferSize,
+            this.state.samplesPerTick - this.state.currentTickSamplePosition
+        );
+    };
+
     _createChannels(channelCount) {
         const channels = [];
         var i;
 
         for(i=0; i<channelCount; i++) {
-            channels.push(new ProtrackerChannel(this.bufferLength));
+            channels.push(new ProtrackerChannel(
+                this.scriptProcessorNode.bufferSize,
+                this.audioContext.sampleRate,
+                this.amigaClockSpeed
+            ));
         }
 
         return channels;
@@ -231,12 +274,54 @@ class Protracker extends Player {
         return song.patterns[state.currentPatternIndex][state.currentRowIndex];
     };
 
-    _getSongPosition(state) {
-        return `${state.currentPattern}-${state.currentRow}-${state.currentTick}`;
+    _goToNextPosition() {
+        let nextPosition = (
+            this._setTick(this.currentTick + 1) ||
+            this._setRowIndex(this.currentRowIndex + 1) ||
+            this._setPatternIndex(this.currentPatternIndex + 1)
+        );
+
+        // If there was no next position to advance to, attempt to loop
+        if(!nextPosition) {
+            if(this.song.songLoop !== undefined) {
+                this._setPatternIndex(this.song.songLoop);
+            }
+        }
     };
 
-    _processSongLevelEffect(song, state, instruction) {
+    _mergeChannelsToOutput(outputBuffer) {
+        let left = {};
+        let mixDivider;
+        let right = {};
+        let sum;
 
+        // If song has 4 channels, mimick amiga left/right split (LRRL)
+        if(this.songInfo.channelCount === 4) {
+            left.mixChannels = [0,3];
+            right.mixChannels = [1,2];
+        }
+        // Otherwise, just assume the channels alternate (LRLRLR...)
+        else {
+            left.mixChannels = [0..this.songInfo.channelCount].filter(channel => channel % 2 === 0);
+            right.mixChannels = [0..this.songInfo.channelCount].filter(channel => channel % 2 !== 0);
+        }
+
+        // Assign the outputBuffers for each stereo channel
+        left.outputBuffer = outputBuffer.getChannelData(0);
+        right.outputBuffer = outputBuffer.getChannelData(1);
+
+        // This is the number we need to divide by when mixing
+        mixDivider = Math.max(left.channels.length, right.channels.length);
+
+        // For each stereo channel, loop through samples and mix them into output buffer
+        [left, right].forEach(speakerChannel => {
+            for(i=0; i<this.speakerChannel.outputBuffer.length; i++) {
+                speakerChannel.mixChannels.forEach(channelIndex => {
+                    sum = sum + this.channels[channelIndex].getBuffer()[i];
+                });
+                speakerChannel.outputBuffer[i] = (sum / mixDivider);
+            }
+        });
     };
 
     _setPatternIndex(index) {
@@ -247,7 +332,7 @@ class Protracker extends Player {
             return true;
         }
         return false;
-    }
+    };
 
     _setRowIndex(index) {
         if(this._getCurrentPattern()[index]) {
@@ -256,7 +341,7 @@ class Protracker extends Player {
             return true;
         }
         return false;
-    }
+    };
 
     _setTick(tick) {
         if(tick < this.song.ticksPerRow) {
@@ -266,5 +351,18 @@ class Protracker extends Player {
             return true;
         }
         return false;
+    };
+
+    _setupAudioNodes() {
+        // Set bufferSoureNode to looping so that the bufferSourceNode never stops
+        this.bufferSourceNode.loop = true;
+
+        // Add function to allow the scriptProcessorNode to process audio data
+        this.scriptProcessorNode.onAudioProcess = () => this.onAudioProcess;
+
+        // Connect everything up
+        this.bufferSourceNode.buffer = this.buffer;
+        this.bufferSourceNode.connect(this.scriptProcessorNode);
+        this.scriptProcessorNode.connect(audioCtx.destination);
     };
 }

@@ -1,16 +1,21 @@
-class MusicPlayer = {
+import ExtendedClass from './ExtendedClass';
+import * as utils from './utils';
+
+// Players
+import Protracker from './players/Protracker/Protracker';
+
+
+export default class MusicPlayer extends ExtendedClass {
     constructor() {
         this.audioContext = window.getAudioContext();
         this.currentPlayer = null;
 
-        // Load all audio players
+        // Create a list of players for looping later
         this.players = [
-            require('players/Protracker/Protracker');
+            Protracker
         ]
 
-        this.api = {
-            getCurrentPlayer: this.getCurrentPlayer
-        }
+        this.api = this._getPublicApi();
     }
 
     /****************************
@@ -23,10 +28,10 @@ class MusicPlayer = {
     loadFile(source, type) {
         return (() => {
             if(type === 'url') {
-                return _loadFileFromUrl(source);
+                return utils.loadFileFromUrl(source);
             }
             else {
-                return _loadFileFromDisk(source);
+                return utils.loadFileFromDisk(source);
             }
         })()
         .then(fileData => {
@@ -57,55 +62,5 @@ class MusicPlayer = {
     /****************************
      *     Private functions     *
      ****************************/
-    _loadFileFromDisk(source) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader;
 
-            reader.on('load', fileData => {
-                if(fileData) {
-                    resolve(fileData);
-                }
-                else {
-                    reject("EMPTY", "File is empty");
-                }
-            });
-            reader.on('timeout', function() {
-                reject("TIMEOUT", "Request timed out");
-            });
-            reader.on('abort', function() {
-                reject('ABORT', "Request aborted");
-            });
-
-            reader.readAsArrayBuffer(source);
-        })
-    };
-
-    _loadFileFromUrl(sourceUrl) {
-        return new Promise((resolve, reject) => {
-            const req = new XMLHttpRequest();
-
-            req.onreadystatechange = response => {
-                if(response.reponse) {
-                    resolve(response.response);
-                }
-                else {
-                    reject("EMPTY", "File is empty");
-                }
-            }
-            req.on('error', function() {
-                reject("ERROR", "Network error");
-            });
-            req.on('timeout', function() {
-                reject("TIMEOUT", "Request timed out");
-            });
-            req.on('abort', function() {
-                reject('ABORT', "Request aborted");
-            });
-
-            req.responseType = 'arrayBuffer';
-            req.open('GET', sourceUrl, true);
-        });
-    };
-}
-
-export MusicPlayer;
+};

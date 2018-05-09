@@ -1,4 +1,4 @@
-export const effectCodes {
+export default const effectCodes {
     ARPEGGIO:                     '0',
     PORTAMENTO_UP:                '1',
     PORTAMENTO_DOWN:              '2',

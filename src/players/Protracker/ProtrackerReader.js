@@ -1,4 +1,4 @@
-import * as utils from 'utils'
+import * as utils from '../../utils'
 
 
 /****************************
@@ -6,7 +6,7 @@ import * as utils from 'utils'
  ****************************/
 export function getChannelCount(fileData) {
     const signature = getSignature(fileData);
-    var channelCount = 4;
+    let channelCount = 4;
 
     switch(signature) {
         case '8CHN':
@@ -31,7 +31,6 @@ export function getChannelCount(fileData) {
         case /^[579]CHN$/.test(signature):
             channelCount = parseInt(signature.substr(0,1));
             break;
-
     }
 
     return channelCount;
@@ -39,7 +38,7 @@ export function getChannelCount(fileData) {
 
 export function getFormatDescription(fileData) {
     const signature = getSignature(fileData);
-    var type = 'unknown';
+    let type = 'unknown';
 
     switch(signature) {
         case 'M.K.':
@@ -59,7 +58,7 @@ export function getFormatDescription(fileData) {
             type = 'FastTracker (2 channels)';
             break;
         case /^[0-9][0-9]CH$/.test(signature):
-            type = 'FastTracker (`${parseInt(signature.substr(0,2))}` channels)';
+            type = `FastTracker (${parseInt(signature.substr(0,2))} channels)`;
             break;
         case 'CD81':
         case 'OKTA':
@@ -69,10 +68,10 @@ export function getFormatDescription(fileData) {
             type = 'Octamed';
             break;
         case /^TDZ[0-9]$/.test(signature):
-            type = 'TakeTracker (`${parseInt(signature.substr(3))}` channels)';
+            type = `TakeTracker (${parseInt(signature.substr(3))} channels)`;
             break;
         case /^[579]CHN$/.test(signature):
-            type = 'TakeTracker (`${parseInt(signature.substr(0,1))}` channels)';
+            type = `TakeTracker (${parseInt(signature.substr(0,1))} channels)`;
             break;
         case 'FLT4':
             type = 'StarTrekker';
@@ -85,13 +84,17 @@ export function getFormatDescription(fileData) {
     return type;
 };
 
+/*
+    This scans through the pattern sequence table to find the highest pattern index.
+    That is the number of patterns used by the song.
+*/
 export function getPatternCount(fileData) {
     const patternSequence = getPatternSequence(fileData);
 
-    // The largest number in the pattern sequence is the number of patterns we have
+    // Pattern count is the largest pattern index + 1 (as patterns are zero-indexed)
     return patternSequence.reduce((a,b) => {
         return Math.max(a,b)
-    });
+    }) + 1;
 };
 
 /*
@@ -116,15 +119,23 @@ export function getPatternCount(fileData) {
     [channel0row0-4bytes][channel1row0-4bytes][channel2row0-4bytes][channel3row0-4bytes]
     [channel0row1-4bytes][channel1row1-4bytes][channel2row1-4bytes][channel3row1-4bytes]
     etc...
+
+    If the file has more than 4 channels, it should just follow suit as above (so if there
+    are 8 channels, it would be [ch0][ch1][ch2][ch3][ch4][ch5][ch6][ch7] and carry on like
+    that for 64 rows). The exception is if the signature FLT8, where instead of having
+    8 instructions per row, it has 4 instructions per row and uses two patterns worth of
+    rows to create one 8-channel pattern. E.G - the first pattern has [ch0][ch1][ch2][ch3]
+    for 64 rows, then the next pattern has [ch4][ch5][ch6][ch7] for 64 rows. You then have
+    to stick these back together.
 */
 export function getPatterns(fileData) {
     const channelCount = getChannelCount(fileData);
     const patterns = [];
-    const start = 20 + (30*31) + 2 + 128 + 4;
+    const start = 20 + (30*31) + 1 + 1 + 128 + 4;
     const patternCount = getPatternCount(fileData);
     const view = new DataView(fileData);
 
-    var i, j, k, top, bottom;
+    let i, j, k, top, bottom;
 
     // Loop through patterns
     for(i=0; i<patternCount; i++) {
@@ -142,7 +153,7 @@ export function getPatterns(fileData) {
                 // We shift right by 4 bits and then left by 4 bits to remove the lower 4 bits.
                 top = (view.getUint8(start + (i*64*channelCount*4) + (j*channelCount*4) + (k*4)) >> 4) << 4;
                 bottom = view.getUint8(start + (i*64*channelCount*4) + (j*channelCount*4) + (k*4) + 2) >> 4;
-                patterns[i][j][k].sample = top + bottom;
+                patterns[i][j][k].sampleIndex = top + bottom;
 
                 // period - represented by bottom 4 bits in the first byte and the second byte (12 byte number).
                 // We get the lower 4 bits by using the modulus of 16 (remainder of dividing by 16).
@@ -155,9 +166,9 @@ export function getPatterns(fileData) {
                 bottom =  view.getUint8(start + (i*64*channelCount*4) + (j*channelCount*4) + (k*4) + 3);
                 patterns[i][j][k].effect = {
                     code: top,
-                    p:    bottom
-                    px:   (parameter >> 4) << 4;
-                    py:   (parameter << 4) >> 4;
+                    p:    bottom,
+                    px:   (bottom >> 4),
+                    py:   (bottom % 16)
                 };
             }
         }
@@ -166,14 +177,42 @@ export function getPatterns(fileData) {
     return patterns;
 };
 
+export function getPatternSequence(fileData) {
+    const patternSequenceData = fileData.slice(952, 1080);
+
+    let i;
+    let lastIndex = 0;
+    let patternSequence = [];
+
+    // Convert pattern sequence bytes to an integer array (they are big endian in the file)
+    for(i=0; i<128; i++) {
+        patternSequence[i] = utils.readBigEndian8bitInt(patternSequenceData, i);
+    };
+
+    // Find out where the last pattern index is (the sequence is zero-padded)
+    for(i=patternSequence.length-1; i>=0; i--) {
+        if(patternSequence[i] !== 0) {
+            lastIndex = i;
+            break;
+        }
+    }
+
+    // Return pattern sequence, trimming off zero-padding
+    return patternSequence.slice(0, lastIndex + 1)
+};
+
+export function getSampleCount() {
+    return 31;
+};
+
 export function getSamples(fileData) {
     const channelCount = getChannelCount(fileData);
     const patternCount = getPatternCount(fileData);
     const samples = [];
 
-    var start;
-    var sampleHeaderData;
-    var i;
+    let start;
+    let sampleHeaderData;
+    let i;
 
     // Run through file extracting sample data from sample headers
     start = 20;
@@ -186,7 +225,7 @@ export function getSamples(fileData) {
     }
 
     // Run through samples and read sample wave data from file
-    start = 20 + (30*31) + 2 + 128 + 4 + (patternCount * 64 * channelCount * 4);
+    start = 20 + (30*31) + 1 + 1 + 128 + 4 + (patternCount * 64 * channelCount * 4);
     for(i=0; i<31; i++) {
         // Convert audio data for this sample to float32 array
         samples[i].audio = _getSampleAudio(fileData.slice(start, start + samples[i].length));
@@ -198,29 +237,33 @@ export function getSamples(fileData) {
     return samples;
 };
 
-export function getPatternSequence(fileData) {
-    const patternSequenceData = fileData.slice(952, 1080);
-
-    var i;
-    var patternSequence = [];
-
-    // Convert pattern sequence bytes to an integer array (they are big endian in the file)
-    for(i=0; i<128; i++) {
-        patternSequence[i] = utils.readBigEndian8bitInt(patternSequenceData, i);
-    };
-
-    // Filter out zeroes (pattern sequence is zero-padded)
-    return patternSequence.filter(patternIndex => patternIndex > 0);
-};
-
 export function getSignature(fileData) {
-    const headerStart = 20 + (30*31) + 2 + 128;
+    const headerStart = 20 + (30*31) + 1 + 1 + 128;
     return utils.readStringFromArrayBuffer(fileData, headerStart, headerStart + 4);
 }
 
-export function getTitle(fileData) {
-    return utils.readStringFromArrayBuffer(fileData, 0, 20);
+export function getSongLoopPatternSequenceIndex(fileData) {
+    const start = 20 + (30*31) + 1;
+    const value = utils.readBigEndian8bitInt(fileData, start)
+
+    // If value < 127, it signifies loop index. Otherwise, there is no loop (return undefined).
+    if(value < 127) {
+        return value;
+    }
 };
+
+export function getTitle(fileData) {
+    return utils.readStringFromArrayBuffer(fileData, 0, 20).replace(/\u0000/g, ' ').trim();
+};
+
+/*
+    This figure is the number of pattern sequence positions used by the song
+*/
+export function getUsedPatternSequenceLength(fileData) {
+    const start = 20 + (30*31);
+    return utils.readBigEndian8bitInt(fileData, start);
+}
+
 
 
 /*****************************
@@ -244,7 +287,8 @@ function _getSampleAudio(sampleData) {
     const view = new DataView(sampleData);
 
     // Create a float32 array to hold our converted samples
-    var float32Samples = new Float32Array(sampleData.byteLength);
+    let float32Samples = new Float32Array(sampleData.byteLength);
+    let i;
 
     // Run through samples and convery from signed 8-bit int to signed float32
     for(i=0; i<sampleData.byteLength; i++) {
@@ -257,11 +301,11 @@ function _getSampleAudio(sampleData) {
 function _getSampleHeader(sampleHeaderData) {
     return {
         name:         utils.readStringFromArrayBuffer(sampleHeaderData, 0, 22),
-        length:       utils.bigEndian16bitInt(sampleHeaderData, 22) * 2,
-        fineTune:     _getFineTuneValue(utils.bigEndian8bitInt(sampleHeaderData, 24)),
-        volume:       Math.min(utils.bigEndian8bitInt(sampleHeaderData, 25), 64),
-        repeatOffset: utils.bigEndian16bitInt(sampleHeaderData, 26) * 2,
-        repeatLength: utils.bigEndian16bitInt(sampleHeaderData, 28) * 2
+        length:       utils.readBigEndian16bitInt(sampleHeaderData, 22) * 2,
+        fineTune:     _getFineTuneValue(utils.readBigEndian8bitInt(sampleHeaderData, 24)),
+        volume:       Math.min(utils.readBigEndian8bitInt(sampleHeaderData, 25), 64),
+        repeatOffset: utils.readBigEndian16bitInt(sampleHeaderData, 26) * 2,
+        repeatLength: utils.readBigEndian16bitInt(sampleHeaderData, 28) * 2
     }
 };
 
