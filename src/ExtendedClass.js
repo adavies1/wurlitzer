@@ -35,12 +35,12 @@ export default class ExtendedClass {
         )
 
         // Now filter prop names, removing private (start with _)
-        props.filter(prop => {
-            if(prop[0] !== '_') return true;
+        props = props.filter(prop => {
+            return prop[0] !== '_';
         });
 
         // Get functions, bind them and then add them to a new object
-        props.each(prop => {
+        props.forEach(prop => {
             publicFunctions[prop] = this[prop].bind(this);
         });
 

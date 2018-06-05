@@ -2,6 +2,8 @@ import ExtendedClass from '../ExtendedClass';
 
 export default class Player extends ExtendedClass {
     constructor(audioContext, fileData) {
+        super(audioContext, fileData);
+
         this.audioContext = audioContext;
 
         this.song = {
@@ -25,7 +27,7 @@ export default class Player extends ExtendedClass {
         //     stop:             this.stop.bind(this)
         // };
 
-        this.api = getPublicApi(this);
+        this.api = this._getPublicApi(this);
         return this.api;
     };
 
@@ -33,33 +35,43 @@ export default class Player extends ExtendedClass {
     /****************************
      *     Public functions     *
      ****************************/
-    // goToSubtrack(index) {
-    //     // Stub, you need to override this
-    // };
+    goToSubtrack(index) {
+        console.warn('Stub, you need to override this function');
+    };
 
-    // nextSubtrack() {
-    //     this.goToSubtrack('next');
-    // };
+    hasSubtracks() {
+        return this.song.hasSubtracks;
+    };
 
-    // pause() {
-    //     // Stub, you need to override this
-    // };
+    isFileSupported(fileData) {
+        // Override this with logic to check if your player can play this file
+        console.warn('Stub, you need to override this function');
+        return false;
+    };
 
-    // play() {
-    //     // Stub, you need to override this
-    // };
+    nextSubtrack() {
+        this.goToSubtrack('next');
+    };
 
-    // previousSubtrack() {
-    //     this.goToSubtrack('previous');
-    // }
+    pause() {
+        console.warn('Stub, you need to override this function');
+    };
 
-    // reset() {
-    //     // Stub, you need to override this
-    // };
+    play() {
+        console.warn('Stub, you need to override this function');
+    };
 
-    // skipToPosition(position) {
-    //     // Stub, you need to override this
-    // };
+    previousSubtrack() {
+        this.goToSubtrack('previous');
+    };
+
+    reset() {
+        console.warn('Stub, you need to override this function');
+    };
+
+    skipToPosition(position) {
+        console.warn('Stub, you need to override this function');
+    };
 
     stop() {
         this.pause();
