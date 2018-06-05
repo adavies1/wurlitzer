@@ -2,6 +2,8 @@ import ExtendedClass from '../../ExtendedClass';
 
 export default class ProtrackerChannel extends ExtendedClass {
     constructor(bufferLength, bufferFrequency, amigaClockSpeed) {
+        super();
+
         this.amigaClockSpeed = amigaClockSpeed;
         this.buffer = new Array(bufferLength);
         this.bufferFrequency = bufferFrequency;
@@ -31,9 +33,9 @@ export default class ProtrackerChannel extends ExtendedClass {
         const end = Math.min(bufferStart + samplesToGenerate, this.bufferLength);
         let i = bufferStart;
 
-        // If we have a sample assigned to this channel
+        // For every sample we need to generate
         for(i; i < end; i++) {
-            // Check that the sample hasn't ended
+            // Check that we have a sample assigned and that the sample hasn't ended
             if(this.state.sample !== null && !this.state.sampleHasEnded) {
                 this.buffer[i] = this._getSampleValue();
                 this._incrementSamplePosition();
@@ -70,12 +72,14 @@ export default class ProtrackerChannel extends ExtendedClass {
 
     setFinetune(finetune) {
         this.state.finetune = finetune;
-        this._calculateFrequency();
+        this.state.frequency = this._calculateFrequency();
+        this.state.sampleIncrement = this._calculateSampleIncrement();
     };
 
     setPeriod(period) {
         this.state.period = period;
         this.state.frequency = this._calculateFrequency();
+        this.state.sampleIncrement = this._calculateSampleIncrement();
     };
 
     setSample(sample) {
@@ -96,7 +100,8 @@ export default class ProtrackerChannel extends ExtendedClass {
      *     Private functions     *
      *****************************/
     _calculateFrequency() {
-        return this.amigaClockSpeed / ((this.state.period + this.state.finetune) * 2);
+        let finetunedPeriod = this.state.period * (Math.pow(2, (1/12 * this.state.finetune/8)));
+        return this.amigaClockSpeed / (finetunedPeriod * 2);
     };
 
     _calculateSampleIncrement() {
@@ -104,38 +109,45 @@ export default class ProtrackerChannel extends ExtendedClass {
     };
 
     _getSampleValue() {
-        const fractionOfNextSample = this.state.samplePosition % 1;
-        const lowerSample = this.state.sample.buffer[Math.floor(this.state.samplePosition)];
-        const upperSample = this.state.sample.buffer[Math.ceil(this.state.samplePosition)];
+        if(!this.state.sampleHasEnded) {
+            const fractionOfNextSample = this.state.samplePosition % 1;
+            const lowerSample = this.state.sample.audio[Math.floor(this.state.samplePosition)];
+            const upperSample = this.state.sample.audio[Math.ceil(this.state.samplePosition)];
 
-        const diff = this.state.sample.buffer[upper] - this.state.sample.buffer[lower];
+            const diff = upperSample - lowerSample;
 
-        return lower + (fractionOfNextSample * diff);
+            return lowerSample + (fractionOfNextSample * diff);
+        }
+        else {
+            return 0;
+        }
     };
 
     _incrementSamplePosition() {
-        let nextPosition = this.state.samplePosition + this.state.sampleIncrement;
-        let sampleEnd;
+        if(!this.state.sampleHasEnded) {
+            let nextPosition = this.state.samplePosition + this.state.sampleIncrement;
+            let sampleEnd;
 
-        // The end of the sample is different depending on if the sample is now looping or not
-        if(this.state.sampleHasLooped) {
-            sampleEnd = this.state.sample.repeatOffset + this.state.sample.repeatLength;
-        }
-        else {
-            sampleEnd = this.state.sample.length - 1;
-        }
-
-        // Increment sample position
-        if(nextPosition < sampleEnd) {
-            this.state.samplePosition = nextPosition;
-        }
-        else {
-            if(this.state.sample.repeatLength > 2) {
-                this.state.sampleHasLooped = true;
-                this.state.samplePosition = this.state.sample.repeatOffset + (nextPosition - sampleEnd);
+            // The end of the sample is different depending on if the sample is now looping or not
+            if(this.state.sampleHasLooped) {
+                sampleEnd = this.state.sample.repeatOffset + this.state.sample.repeatLength;
             }
             else {
-                this.state.sampleHasEnded = true;
+                sampleEnd = this.state.sample.length - 1;
+            }
+
+            // Increment sample position
+            if(nextPosition < sampleEnd) {
+                this.state.samplePosition = nextPosition;
+            }
+            else {
+                if(this.state.sample.repeatLength > 2) {
+                    this.state.sampleHasLooped = true;
+                    this.state.samplePosition = this.state.sample.repeatOffset + (nextPosition - sampleEnd);
+                }
+                else {
+                    this.state.sampleHasEnded = true;
+                }
             }
         }
     };
