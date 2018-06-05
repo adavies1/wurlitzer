@@ -1,5 +1,5 @@
 import { use, expect } from 'chai';
-import sinon from 'sinon';
+//import sinon from 'sinon';
 import * as utils from '../../src/utils';
 
 describe('Utils tests', () => {
