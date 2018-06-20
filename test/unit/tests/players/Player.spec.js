@@ -1,6 +1,6 @@
 import { use, expect } from 'chai';
-import * as utils from '../../../src/utils';
-import Player from '../../../src/players/Player';
+import * as utils from '../../../../src/utils';
+import Player from '../../../../src/players/Player';
 
 describe('Player tests', function() {
     let player;
@@ -9,18 +9,12 @@ describe('Player tests', function() {
         player = new Player(null, null);
     });
 
-    it('Should return a public API with specific functions', function() {
-        expect(Object.keys(player)).to.eql([
-            'goToSubtrack',
-            'hasSubtracks',
-            'isFileSupported',
-            'nextSubtrack',
-            'pause',
-            'play',
-            'previousSubtrack',
-            'reset',
-            'skipToPosition',
-            'stop'
+    it('Should return a public API with specific functions / properties', function() {
+        expect(Object.keys(player).sort()).to.eql([
+            'api',
+            'audioContext',
+            'song',
+            'state',
         ]);
     });
 

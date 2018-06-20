@@ -1,6 +1,5 @@
 import { use, expect } from 'chai';
-//import sinon from 'sinon';
-import * as utils from '../../src/utils';
+import * as utils from '../../../src/utils';
 
 describe('Utils tests', () => {
     const buffer = new ArrayBuffer(11);
@@ -13,22 +12,23 @@ describe('Utils tests', () => {
         });
     });
 
-    // loadFileFromDisk
-    describe('loadFileFromDisk tests', () => {
-        it('Should read song data from a file without errors', () => {
-            return utils.loadFileFromDisk(global.config.modFilePath)
-            .then(dataArrayBuffer => {
-                expect(dataArrayBuffer.constructor).to.equal(ArrayBuffer);
-                expect(dataArrayBuffer.byteLength).to.equal(46814);
-                expect(utils.readStringFromArrayBuffer(dataArrayBuffer, 1080, 1084)).to.equal('M.K.');
-            });
-        });
-    });
+    // loadFileFromDisk - Cant test this as you cant get a File reference programatically when testing in the browser
+    // describe('loadFileFromDisk tests', () => {
+    //     it('Should read song data from a file without errors', () => {
+    //         return utils.loadFileFromDisk(window.globals.modFilePath)
+    //         .then(dataArrayBuffer => {
+    //             expect(dataArrayBuffer.constructor).to.equal(ArrayBuffer);
+    //             expect(dataArrayBuffer.byteLength).to.equal(46814);
+    //             expect(utils.readStringFromArrayBuffer(dataArrayBuffer, 1080, 1084)).to.equal('M.K.');
+    //         });
+    //     });
+    // });
+
 
     // loadFileFromUrl tests
     describe('loadFileFromUrl tests', () => {
         it('Should read data from a URL without errors', () => {
-            var p = utils.loadFileFromUrl('http://www.test_url.com/fake.mod');
+            var p = utils.loadFileFromUrl(globals.modFileUrl);
             return p.then(dataArrayBuffer => {
                 expect(dataArrayBuffer.constructor).to.equal(ArrayBuffer);
                 expect(dataArrayBuffer.byteLength).to.equal(46814);
@@ -68,9 +68,5 @@ describe('Utils tests', () => {
         it('Read from position to end', () => {
             expect(utils.readStringFromArrayBuffer(buffer, 6)).to.equal('there');
         });
-    });
-
-    after(() => {
-
     });
 })

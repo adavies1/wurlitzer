@@ -28,7 +28,6 @@ export default class Player extends ExtendedClass {
         // };
 
         this.api = this._getPublicApi(this);
-        return this.api;
     };
 
 

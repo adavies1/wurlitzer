@@ -1,5 +1,5 @@
 import {use, expect} from 'chai';
-import ProtrackerChannel from '../../../../src/players/Protracker/ProtrackerChannel';
+import ProtrackerChannel from '../../../../../src/players/Protracker/ProtrackerChannel';
 
 describe('ProtrackerChannel tests', () => {
     const sample = {
@@ -56,8 +56,7 @@ describe('ProtrackerChannel tests', () => {
 
     describe('getBuffer tests', () => {
         it('Should return a buffer of length 4096', () => {
-            let buffer = channel.getBuffer();
-            expect(buffer.length).to.equal(4096);
+            expect(channel.getBuffer().length).to.equal(4096);
         });
     });
 

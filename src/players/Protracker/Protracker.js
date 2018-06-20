@@ -6,16 +6,16 @@ export default class Protracker extends Player {
     constructor(audioContext, fileData) {
         super(audioContext, fileData);
 
-        this.amigaClockSpeed     = this._setAmigaClock('PAL');
+        this.amigaClockSpeed     = this.setAmigaClockSpeed('PAL');
         this.buffer              = audioContext.createBuffer(2, audioContext.sampleRate, audioContext.sampleRate);
         this.bufferSourceNode    = audioContext.createBufferSource();
-        this.channels            = this._createChannels(reader.getChannelCount(fileData));
         this.scriptProcessorNode = audioContext.createScriptProcessor(undefined, 1, 2);
+        this.channels            = this._createChannels(reader.getChannelCount(fileData));
 
         // Get all of the read-only properties of the song from the file
         Object.assign(this.song, {
             channelCount:    reader.getChannelCount(fileData),
-            patternCount:    reader.getPatternCount(fileDate),
+            patternCount:    reader.getPatternCount(fileData),
             patterns:        reader.getPatterns(fileData),
             patternSequence: reader.getPatternSequence(fileData),
             samples:         reader.getSamples(fileData),
@@ -41,29 +41,6 @@ export default class Protracker extends Player {
         // Set up audioContext / audio nodes
         this._setupAudioNodes();
 
-        // Set up the API (stops access to private functions)
-        // this.api = Object.assign(this.api, {
-        //     getChannels:      this.getChannels.bind(this),
-        //     getPlaybackState: this.getPlaybackState.bind(this),
-        //     getSongInfo:      this.getSongInfo.bind(this),
-        //     nextPattern:      this.nextPattern.bind(this),
-        //     nextRow:          this.nextRow.bind(this),
-        //     nextSubtrack:     this.nextSubtrack.bind(this),
-        //     nextTick:         this.nextTick.bind(this),
-        //     previousPattern:  this.nextPattern.bind(this),
-        //     previousRow:      this.previousRow.bind(this),
-        //     previousSubtrack: this.previousSubtrack.bind(this),
-        //     previousTick:     this.previousTick.bind(this),
-        //     pause:            this.pause.bind(this),
-        //     play:             this.play.bind(this),
-        //     reset:            this.reset.bind(this),
-        //     setAmigaClock:    this.setAmigaClock.bind(this),
-        //     setPattern:       this.setPattern.bind(this),
-        //     setRow:           this.setRow.bind(this),
-        //     setSubtrack:      this.setSubtrack.bind(this),
-        //     setTick:          this.setTick.bind(this),
-        // });
-
         this.api = this._getPublicApi();
         return this.api;
     };
@@ -80,7 +57,7 @@ export default class Protracker extends Player {
         return this.state;
     };
 
-    getSongInfo() {
+    getSong() {
         return this.song;
     };
 
@@ -149,7 +126,7 @@ export default class Protracker extends Player {
         });
     };
 
-    setAmigaClock(region) {
+    setAmigaClockSpeed(region) {
         if(typeof region === 'string') {
             if(region.toUpperCase() === 'PAL') {
                 this.amigaClockSpeed = 7093789.2;
@@ -315,7 +292,7 @@ export default class Protracker extends Player {
 
         // For each stereo channel, loop through samples and mix them into output buffer
         [left, right].forEach(speakerChannel => {
-            for(i=0; i<this.speakerChannel.outputBuffer.length; i++) {
+            for(i=0; i<speakerChannel.outputBuffer.length; i++) {
                 speakerChannel.mixChannels.forEach(channelIndex => {
                     sum = sum + this.channels[channelIndex].getBuffer()[i];
                 });
@@ -363,6 +340,6 @@ export default class Protracker extends Player {
         // Connect everything up
         this.bufferSourceNode.buffer = this.buffer;
         this.bufferSourceNode.connect(this.scriptProcessorNode);
-        this.scriptProcessorNode.connect(audioCtx.destination);
+        this.scriptProcessorNode.connect(this.audioContext.destination);
     };
 }

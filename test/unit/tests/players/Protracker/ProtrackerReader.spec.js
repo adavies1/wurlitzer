@@ -1,35 +1,44 @@
 import {use, expect} from 'chai';
-import * as ProtrackerReader from '../../../../src/players/Protracker/ProtrackerReader';
+import * as ProtrackerReader from '../../../../../src/players/Protracker/ProtrackerReader';
+import * as utils from '../../../../../src/utils';
 
-let modFileArrayBuffer = FileReader.prototype.readAsArrayBuffer(global.config.modFilePath);
+let modFileArrayBuffer;
+let patterns;
+let samples;
+let sequence;
 
 describe('ProtrackerReader tests', () => {
     before(() => {
-        //modFileArrayBuffer = FileReader.prototype.readAsArrayBuffer(global.config.modFilePath);
+        return utils.loadFileFromUrl(window.globals.modFileUrl)
+        .then((data) => {
+            modFileArrayBuffer = data;
+            patterns = ProtrackerReader.getPatterns(modFileArrayBuffer);
+            samples  = ProtrackerReader.getSamples(modFileArrayBuffer);
+            sequence = ProtrackerReader.getPatternSequence(modFileArrayBuffer);
+        });
     });
 
-    describe('getChannelCount tests', (done) => {
+    describe('getChannelCount tests', () => {
         // Expand this to check every kind of module
         it('Should detect the correct number of channels for a module', () => {
             expect(ProtrackerReader.getChannelCount(modFileArrayBuffer)).to.equal(4);
         });
     });
 
-    describe('getFormatDescription tests', (done) => {
+    describe('getFormatDescription tests', () => {
         it('Should identify the module as ProTracker', () => {
             expect(ProtrackerReader.getFormatDescription(modFileArrayBuffer)).to.equal('ProTracker');
-        })
+        });
     });
 
-    describe('getPatternCount tests', (done) => {
-        it('Should detect the correct number of patterns for a module', ()=> {
+    describe('getPatternCount tests', () => {
+        it('Should detect the correct number of patterns for a module', () => {
             expect(ProtrackerReader.getPatternCount(modFileArrayBuffer)).to.equal(14);
         });
     });
 
-    describe('getPatterns tests', (done) => {
-        it('Should return a 3D array [14][64][4]', ()=> {
-            let patterns = ProtrackerReader.getPatterns(modFileArrayBuffer);
+    describe('getPatterns tests', () => {
+        it('Should return a 3D array [14][64][4]', () => {
             expect(Array.isArray(patterns)).to.equal(true);
             expect(patterns.length).to.equal(14);
 
@@ -47,8 +56,6 @@ describe('ProtrackerReader tests', () => {
         });
 
         describe('Check integrity of each instruction', () => {
-            let patterns = ProtrackerReader.getPatterns(modFileArrayBuffer);
-
             it('Should have valid sample indexes', () => {
                 patterns.forEach(pattern => {
                     pattern.forEach(row => {
@@ -110,9 +117,7 @@ describe('ProtrackerReader tests', () => {
         });
     });
 
-    describe('getPatternSequence tests', (done) => {
-        let sequence = ProtrackerReader.getPatternSequence(modFileArrayBuffer);
-
+    describe('getPatternSequence tests', () => {
         it('Should return a pattern sequence with 16 indexes', () => {
             expect(sequence.length).to.equal(16);
         });
@@ -126,17 +131,15 @@ describe('ProtrackerReader tests', () => {
 
         it('Should return the correct pattern sequence', () => {
             expect(sequence).to.deep.equal([0,1,2,3,4,3,5,6,7,8,9,10,11,11,12,13]);
-        })
+        });
     });
 
-    describe('getSamples tests', (done) => {
+    describe('getSamples tests', () => {
         it('Should return an array with 31 samples', () => {
             expect(ProtrackerReader.getSamples(modFileArrayBuffer).length).to.equal(31);
         });
 
         describe('Check integrity of each sample', () => {
-            let samples = ProtrackerReader.getSamples(modFileArrayBuffer);
-
             it('Should return valid sample names', () => {
                 samples.forEach(sample => {
                     expect(typeof sample.name).to.equal('string');
@@ -180,31 +183,27 @@ describe('ProtrackerReader tests', () => {
         });
     });
 
-    describe('getSignature tests', (done) => {
+    describe('getSignature tests', () => {
         it('Should return the signature "M.K."', () => {
             expect(ProtrackerReader.getSignature(modFileArrayBuffer)).to.equal('M.K.');
         });
     });
 
-    describe('getSongLoopPatternSequenceIndex tests', (done) => {
+    describe('getSongLoopPatternSequenceIndex tests', () => {
         it('Should return the pattern sequence index used when looping', () => {
             expect(ProtrackerReader.getSongLoopPatternSequenceIndex(modFileArrayBuffer)).to.equal(undefined);
         });
     });
 
-    describe('getTitle tests', (done) => {
+    describe('getTitle tests', () => {
         it('Should return the title (which is blank)', () => {
             expect(ProtrackerReader.getTitle(modFileArrayBuffer)).to.equal('');
         });
     });
 
-    describe('getUsedPatternSequenceLength tests', (done) => {
+    describe('getUsedPatternSequenceLength tests', () => {
         it('Should return the number of used pattern sequence slots', () => {
             expect(ProtrackerReader.getUsedPatternSequenceLength(modFileArrayBuffer)).to.equal(16);
         });
-    })
-
-    after(() => {
-
-    })
-})
+    });
+});
