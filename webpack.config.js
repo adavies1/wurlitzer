@@ -1,12 +1,25 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
-    entry: './src/index.js',
-    node: {
-        fs: 'empty'
+    entry: './src/index.ts',
+    mode: 'production',
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                use: {
+                    loader: 'ts-loader',
+                },
+                exclude: /node_modules/,
+            }
+        ]
     },
     output: {
-        filename: 'bundle.js',
-        path: path.resolve(__dirname, 'dist')
-    }
+        filename: '[name].bundle.js',
+        path: path.resolve(__dirname, 'dist'),
+    },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js', '.jsx']
+    },
 };

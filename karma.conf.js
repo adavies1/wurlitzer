@@ -1,29 +1,52 @@
+var webpack = require('webpack');
+var webpackConfig = require('./webpack.config.js');
+
 module.exports = function(config) {
     config.set({
-        browsers: ['ChromeHeadless'],
-        client: {
-            config: {
-                mocha: {
-
-                }
-            }
-        },
+        basePath: "",
+        frameworks: ["mocha", "chai"],
         files: [
-            'globals.js',
-            'test/unit/tests/**/*.spec.js',
+            "test/unit/**/*.spec.ts",
             {
                 // This allows karma to serve any resources (you'll get 404 otherwise)
                 pattern: 'test/unit/resources/**/*',
                 included: false
             }
         ],
-        frameworks: ['mocha', 'chai'],
-        port: 9876,
+        exclude: [],
         preprocessors: {
-            'test/unit/tests/**/*.js': ['webpack']
+            "test/unit/**/*.ts": ["webpack", "sourcemap"],
+        },
+        mime: {
+            'text/x-typescript': ['ts','tsx']
         },
         webpack: {
-            mode: 'development'
+            mode: 'development',
+            module: webpackConfig.module,
+            resolve: webpackConfig.resolve,
+            devtool: 'inline-source-map',
+            plugins: [
+                new webpack.SourceMapDevToolPlugin({
+                    filename: null,
+                    test: /\.(ts|js)($|\?)/i
+                })
+            ]
+        },
+        webpackServer: {
+            noInfo: true
+        },
+        reporters: ["nyan"],
+        port: 9876,
+        colors: true,
+        logLevel: config.LOG_INFO,
+        autoWatch: true,
+        browsers: ["ChromeHeadless"],
+        singleRun: false,
+        concurrency: Infinity,
+        formatError: function(msg) {
+            let output = msg.replace(/webpack:\/\/\//g, '');
+            output = output.substring(output.indexOf('(') + 1, output.search(' <-'));
+            return output;
         }
-    })
-}
+    });
+};
