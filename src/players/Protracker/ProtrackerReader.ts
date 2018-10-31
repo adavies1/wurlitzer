@@ -1,12 +1,17 @@
-import * as utils from '../../utils'
+import { EffectCode } from './models/EffectCode.interface';
+import { Instruction } from './models/Instruction.interface';
+import { Sample } from './models/Sample.interface';
+import { SampleHeader } from './models/SampleHeader.interface';
 
+import * as constants from './constants';
+import * as utils from '../../utils'
 
 /****************************
  *     Public functions     *
  ****************************/
-export function getChannelCount(fileData) {
+export function getChannelCount(fileData: ArrayBuffer): number {
     const signature = getSignature(fileData);
-    let channelCount = 4;
+    let channelCount: number = 4;
 
     switch(signature) {
         case '8CHN':
@@ -22,23 +27,24 @@ export function getChannelCount(fileData) {
         case '2CHN':
             channelCount = 2;
             break;
-        case /^[0-9][0-9]CH$/.test(signature):
-            channelCount = parseInt(signature.substr(0,2));
-            break;
-        case /^TDZ[0-9]$/.test(signature):
-            channelCount = parseInt(signature.substr(3));
-            break;
-        case /^[579]CHN$/.test(signature):
-            channelCount = parseInt(signature.substr(0,1));
-            break;
+        default:
+            if(/^[0-9][0-9]CH$/.test(signature)) {
+                channelCount = parseInt(signature.substr(0,2));
+            }
+            else if(/^TDZ[0-9]$/.test(signature)) {
+                channelCount = parseInt(signature.substr(3));
+            }
+            else if(/^[579]CHN$/.test(signature)) {
+                channelCount = parseInt(signature.substr(0,1));
+            }
     }
 
     return channelCount;
 };
 
-export function getFormatDescription(fileData) {
+export function getFormatDescription(fileData: ArrayBuffer): string {
     const signature = getSignature(fileData);
-    let type = 'unknown';
+    let type: string = constants.UNKNOWN_FORMAT;
 
     switch(signature) {
         case 'M.K.':
@@ -57,9 +63,6 @@ export function getFormatDescription(fileData) {
         case '2CHN':
             type = 'FastTracker (2 channels)';
             break;
-        case /^[0-9][0-9]CH$/.test(signature):
-            type = `FastTracker (${parseInt(signature.substr(0,2))} channels)`;
-            break;
         case 'CD81':
         case 'OKTA':
             type = 'Oktalyzer';
@@ -67,18 +70,22 @@ export function getFormatDescription(fileData) {
         case 'OCTA':
             type = 'Octamed';
             break;
-        case /^TDZ[0-9]$/.test(signature):
-            type = `TakeTracker (${parseInt(signature.substr(3))} channels)`;
-            break;
-        case /^[579]CHN$/.test(signature):
-            type = `TakeTracker (${parseInt(signature.substr(0,1))} channels)`;
-            break;
         case 'FLT4':
             type = 'StarTrekker';
             break;
         case 'FLT8':
             type = 'StarTrekker (8 channels)';
             break;
+        default:
+            if(/^[0-9][0-9]CH$/.test(signature)){
+                type = `FastTracker (${parseInt(signature.substr(0,2))} channels)`;
+            }
+            else if(/^TDZ[0-9]$/.test(signature)){
+                type = `TakeTracker (${parseInt(signature.substr(3))} channels)`;
+            }
+            else if(/^[579]CHN$/.test(signature)){
+                type = `TakeTracker (${parseInt(signature.substr(0,1))} channels)`;
+            }
     }
 
     return type;
@@ -86,9 +93,12 @@ export function getFormatDescription(fileData) {
 
 /*
     This scans through the pattern sequence table to find the highest pattern index.
-    That is the number of patterns used by the song.
+    That is the number of patterns used by the module.
+
+    The song may not use all of these though, it may be that some patterns were edited,
+    but never intended to be played (imagine devs working to a deadline)
 */
-export function getPatternCount(fileData) {
+export function getPatternCount(fileData: ArrayBuffer): number {
     const patternSequence = getPatternSequence(fileData);
 
     // Pattern count is the largest pattern index + 1 (as patterns are zero-indexed)
@@ -128,9 +138,9 @@ export function getPatternCount(fileData) {
     for 64 rows, then the next pattern has [ch4][ch5][ch6][ch7] for 64 rows. You then have
     to stick these back together.
 */
-export function getPatterns(fileData) {
+export function getPatterns(fileData: ArrayBuffer): Instruction[][][] {
     const channelCount = getChannelCount(fileData);
-    const patterns = [];
+    const patterns: Instruction[][][] = [];
     const start = 20 + (30*31) + 1 + 1 + 128 + 4;
     const patternCount = getPatternCount(fileData);
     const view = new DataView(fileData);
@@ -147,7 +157,7 @@ export function getPatterns(fileData) {
 
             // Loop through channels in the row
             for(k=0; k<channelCount; k++) {
-                patterns[i][j][k] = {};
+                patterns[i][j][k] = {} as Instruction;
 
                 // Sample number
                 // We shift right by 4 bits and then left by 4 bits to remove the lower 4 bits.
@@ -177,12 +187,12 @@ export function getPatterns(fileData) {
     return patterns;
 };
 
-export function getPatternSequence(fileData) {
+export function getPatternSequence(fileData: ArrayBuffer): number[] {
     const patternSequenceData = fileData.slice(952, 1080);
 
     let i;
     let lastIndex = 0;
-    let patternSequence = [];
+    let patternSequence: number[] = [];
 
     // Convert pattern sequence bytes to an integer array (they are big endian in the file)
     for(i=0; i<128; i++) {
@@ -201,69 +211,71 @@ export function getPatternSequence(fileData) {
     return patternSequence.slice(0, lastIndex + 1)
 };
 
-export function getSampleCount() {
+export function getSampleCount(): number {
     return 31;
 };
 
-export function getSamples(fileData) {
+export function getSamples(fileData: ArrayBuffer): Sample[] {
     const channelCount = getChannelCount(fileData);
     const patternCount = getPatternCount(fileData);
-    const samples = [];
+    const samples: Sample[] = [];
 
-    let start;
+    let audio;
+    let header;
+    let headerDataStartOffset = 20;
+    let sampleAudioStartOffset = 20 + (30*31) + 1 + 1 + 128 + 4 + (patternCount * 64 * channelCount * 4);
     let sampleHeaderData;
     let i;
 
-    // Run through file extracting sample data from sample headers
-    start = 20;
+    // Run through and extract header and audio data for all samples
     for(i=0; i<31; i++) {
-        // Each header is 30 bytes, extract them
-        sampleHeaderData = fileData.slice(start, start + ((i+1) * 30));
+        // Each header is 30 bytes, extract them, then decode. Increment start offset position by 30 for next read.
+        sampleHeaderData = fileData.slice(headerDataStartOffset, headerDataStartOffset + 30);
+        header = _getSampleHeader(sampleHeaderData);
+        headerDataStartOffset = headerDataStartOffset + 30;
 
-        // Decode the header for this sample (returns object) and add to array
-        samples.push(_getSampleHeader(sampleHeaderData));
-    }
+        // Extract audio data - the length of the sample comes from the header
+        audio = _getSampleAudio(fileData.slice(sampleAudioStartOffset, sampleAudioStartOffset + header.length));
+        sampleAudioStartOffset = sampleAudioStartOffset + header.length;
 
-    // Run through samples and read sample wave data from file
-    start = 20 + (30*31) + 1 + 1 + 128 + 4 + (patternCount * 64 * channelCount * 4);
-    for(i=0; i<31; i++) {
-        // Convert audio data for this sample to float32 array
-        samples[i].audio = _getSampleAudio(fileData.slice(start, start + samples[i].length));
-
-        // Record the start of the next sample (samples are stored together, one after the next)
-        start = start + samples[i].length;
-    }
+        // Concatenate and add to samples array
+        samples[i] = {
+            ...header,
+            audio
+        }
+    };
 
     return samples;
 };
 
-export function getSignature(fileData) {
+export function getSignature(fileData: ArrayBuffer): string {
     const headerStart = 20 + (30*31) + 1 + 1 + 128;
     return utils.readStringFromArrayBuffer(fileData, headerStart, headerStart + 4);
 }
 
-export function getSongLoopPatternSequenceIndex(fileData) {
+export function getSongLoopPatternSequenceIndex(fileData: ArrayBuffer): number | undefined {
     const start = 20 + (30*31) + 1;
     const value = utils.readBigEndian8bitInt(fileData, start)
 
     // If value < 127, it signifies loop index. Otherwise, there is no loop (return undefined).
-    if(value < 127) {
-        return value;
-    }
+    return (value < 127) ? value : undefined;
 };
 
-export function getTitle(fileData) {
+export function getTitle(fileData: ArrayBuffer): string {
     return utils.readStringFromArrayBuffer(fileData, 0, 20).replace(/\u0000/g, ' ').trim();
 };
 
 /*
     This figure is the number of pattern sequence positions used by the song
 */
-export function getUsedPatternSequenceLength(fileData) {
+export function getUsedPatternSequenceLength(fileData: ArrayBuffer): number {
     const start = 20 + (30*31);
     return utils.readBigEndian8bitInt(fileData, start);
 }
 
+export function isFileSupported(fileData: ArrayBuffer): boolean {
+    return getFormatDescription(fileData) !== constants.UNKNOWN_FORMAT;
+}
 
 
 /*****************************
@@ -274,7 +286,7 @@ export function getUsedPatternSequenceLength(fileData) {
     Value:    0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
     Finetune: 0  +1  +2  +3  +4  +5  +6  +7  -8  -7  -6  -5  -4  -3  -2  -1
 */
-function _getFineTuneValue(rawInteger) {
+function _getFineTuneValue(rawInteger: number): number {
     if(rawInteger >= 8)  {
         return -16 + rawInteger
     }
@@ -283,14 +295,13 @@ function _getFineTuneValue(rawInteger) {
     }
 };
 
-function _getSampleAudio(sampleData) {
+function _getSampleAudio(sampleData: ArrayBuffer): Float32Array {
+    const float32Samples = new Float32Array(sampleData.byteLength);
     const view = new DataView(sampleData);
 
-    // Create a float32 array to hold our converted samples
-    let float32Samples = new Float32Array(sampleData.byteLength);
     let i;
 
-    // Run through samples and convery from signed 8-bit int to signed float32
+    // Run through samples and convert from signed 8-bit int to signed float32
     for(i=0; i<sampleData.byteLength; i++) {
         float32Samples[i] = view.getInt8(i) / 128.00;
     }
@@ -298,7 +309,7 @@ function _getSampleAudio(sampleData) {
     return float32Samples;
 };
 
-function _getSampleHeader(sampleHeaderData) {
+function _getSampleHeader(sampleHeaderData: ArrayBuffer): SampleHeader {
     return {
         name:         utils.readStringFromArrayBuffer(sampleHeaderData, 0, 22),
         length:       utils.readBigEndian16bitInt(sampleHeaderData, 22) * 2,

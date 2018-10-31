@@ -1,5 +1,7 @@
-import {use, expect} from 'chai';
-import ProtrackerChannel from '../../../../../src/players/Protracker/ProtrackerChannel';
+import { use, expect } from 'chai';
+import { ProtrackerChannel } from '../../../../../src/players/Protracker/ProtrackerChannel';
+
+const amigaClockSpeed = 7093789.2;
 
 describe('ProtrackerChannel tests', () => {
     const sample = {
@@ -11,7 +13,7 @@ describe('ProtrackerChannel tests', () => {
         repeatOffset: 0,
         repeatLength: 0
     };
-    let channel;
+    let channel: ProtrackerChannel;
 
     before(() => {
         // Add some audio data to sample
@@ -22,22 +24,7 @@ describe('ProtrackerChannel tests', () => {
     });
 
     beforeEach(() => {
-        channel = new ProtrackerChannel(4096, 44100, 7093789.2);
-    });
-
-    it('Should return a public API with specific functions', () => {
-        expect(Object.keys(channel)).to.eql([
-            'fillBuffer',
-            'getBuffer',
-            'getEffect',
-            'getFinetune',
-            'getPeriod',
-            'getSample',
-            'setEffect',
-            'setFinetune',
-            'setPeriod',
-            'setSample'
-        ]);
+        channel = new ProtrackerChannel(4096, 44100, amigaClockSpeed);
     });
 
     describe('fillBuffer tests', () => {
@@ -124,8 +111,7 @@ describe('ProtrackerChannel tests', () => {
     /*********************
      *     Utilities     *
      *********************/
-    let checkGeneratedFinetunedSamples = function(finetune) {
-        const amigaClockSpeed = 7093789.2;
+    let checkGeneratedFinetunedSamples = function(finetune: number) {
         const channelBuffer = channel.getBuffer();
         const period = 4144;
 
@@ -139,13 +125,16 @@ describe('ProtrackerChannel tests', () => {
         channel.setPeriod(4144);
         channel.setFinetune(finetune);
 
-        channel.fillBuffer(0, 64);
+        channel.fillBuffer(0, 3);
 
-        for(i=0; i<64; i++) {
+        for(i=0; i<3; i++) {
             let lowerSample = sample.audio[Math.floor(i * sampleIncrement)];
             let upperSample = sample.audio[Math.ceil(i * sampleIncrement)];
             let diff = upperSample - lowerSample;
-            let expectedSample = lowerSample + (((i * sampleIncrement) % 1) * diff);
+
+            // JS uses 64bit floats for math, but we store samples in the channelBuffer as 32bit floats.
+            // We need to convert our expected sample, otherwise we'll see mismatches due to rounding errors.
+            let expectedSample = new Float32Array([lowerSample + (((i * sampleIncrement) % 1) * diff)])[0];
             expect(channelBuffer[i]).to.be.closeTo(expectedSample, 0.0000000000000001);
         }
     };

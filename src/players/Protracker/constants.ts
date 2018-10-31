@@ -1,4 +1,12 @@
-export default const effectCodes {
+export const AMIGA_CLOCK_SPEED_NTSC = 7159090.5;
+export const AMIGA_CLOCK_SPEED_PAL = 7093789.2;
+
+export enum AMIGA_CLOCK_SPEED {
+    NTSC = AMIGA_CLOCK_SPEED_NTSC,
+    PAL  = AMIGA_CLOCK_SPEED_PAL
+}
+
+export const EFFECT_CODES = {
     ARPEGGIO:                     '0',
     PORTAMENTO_UP:                '1',
     PORTAMENTO_DOWN:              '2',
@@ -31,3 +39,5 @@ export default const effectCodes {
     FUNKREPEAT:                   '14-15',
     SET_SPEED:                    '15',
 };
+
+export const UNKNOWN_FORMAT = 'Unknown format';

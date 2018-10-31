@@ -1,4 +1,5 @@
 import { use, expect } from 'chai';
+import * as testConstants from '../resources/constants';
 import * as utils from '../../../src/utils';
 
 describe('Utils tests', () => {
@@ -28,7 +29,7 @@ describe('Utils tests', () => {
     // loadFileFromUrl tests
     describe('loadFileFromUrl tests', () => {
         it('Should read data from a URL without errors', () => {
-            var p = utils.loadFileFromUrl(globals.modFileUrl);
+            var p = utils.loadFileFromUrl(testConstants.MOD_FILE_URL);
             return p.then(dataArrayBuffer => {
                 expect(dataArrayBuffer.constructor).to.equal(ArrayBuffer);
                 expect(dataArrayBuffer.byteLength).to.equal(46814);
