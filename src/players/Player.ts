@@ -1,8 +1,9 @@
 import * as constants from '../constants';
 
 export default abstract class Player {
-    status: constants.PlayerState = constants.PlayerState.STOPPED;
+    status: constants.PlayerStatus = constants.PlayerStatus.STOPPED;
 
+    abstract getPlaybackStatus(): constants.PlayerStatus;
     abstract hasSubtracks(): boolean;
     abstract isFileSupported(fileData: ArrayBuffer): boolean;
     abstract pause(): void;
@@ -16,6 +17,6 @@ export default abstract class Player {
     stop() {
         this.pause();
         this.reset();
-        this.status = constants.PlayerState.STOPPED;
+        this.status = constants.PlayerStatus.STOPPED;
     };
 };

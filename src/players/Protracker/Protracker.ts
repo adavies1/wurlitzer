@@ -15,6 +15,7 @@ export interface Song {
     patternCount:    number;
     patterns:        Instruction[][][];
     patternSequence: number[];
+    rowsPerPattern:  number,
     samples:         Sample[];
     signature:       string;
     songLength:      number;
@@ -26,13 +27,13 @@ export interface State {
     currentBufferSamplePosition: number,
     currentPatternSequenceIndex: number,
     currentRowIndex:             number,
+    currentSubtrack:             number,
     currentTickSamplePosition:   number,
     currentTick:                 number,
-    rowsPerPattern:              number,
+    rowsPerBeat:                 number,
     samplesPerTick:              number,
-    speed:                       number,
-    subtrack:                    number,
-    ticksPerRow:                 number,
+    speed:                       number, // A.K.A ticks-per-row
+    tempo:                       number, // A.K.A beats-per-minue (BPM)
 }
 
 export class Protracker extends Player {
@@ -53,6 +54,7 @@ export class Protracker extends Player {
             patternCount:    reader.getPatternCount(fileData),
             patterns:        reader.getPatterns(fileData),
             patternSequence: reader.getPatternSequence(fileData),
+            rowsPerPattern:  reader.getRowsPerPattern(fileData),
             samples:         reader.getSamples(fileData),
             signature:       reader.getSignature(fileData),
             songLength:      reader.getUsedPatternSequenceLength(fileData),
@@ -62,7 +64,7 @@ export class Protracker extends Player {
 
         // Create channels and audio nodes
         this._setupAudioNodes();
-        this._createChannels(this.song.channelCount);
+        this._setupChannels(this.song.channelCount);
 
         // Set state ready to start playback
         this.reset();
@@ -77,8 +79,12 @@ export class Protracker extends Player {
     };
 
     getPlaybackState(): State {
-        return this.state;
+        return this.state
     };
+
+    getPlaybackStatus(): appConstants.PlayerStatus {
+        return this.status;
+    }
 
     getSong(): Song {
         return this.song;
@@ -102,41 +108,56 @@ export class Protracker extends Player {
     };
 
     nextSubtrack(): boolean {
-        return this.setSubtrack(this.state.subtrack + 1);
+        return this.setSubtrack(this.state.currentSubtrack + 1);
     };
 
     nextTick(): boolean {
         return this.setTick(this.state.currentTick + 1) || this.nextRow();
     };
 
+    pause(): boolean {
+        if(this.status === appConstants.PlayerStatus.PLAYING) {
+            this.status = appConstants.PlayerStatus.PAUSED;
+            this.bufferSourceNode.stop();
+            return true;
+        }
+        return false;
+    };
+
+    play(): boolean {
+        this.bufferSourceNode.start();
+        this.status = appConstants.PlayerStatus.PLAYING;
+        return true;
+    };
+
     previousPattern(): boolean {
-        return this.setPatternSequenceIndex(this.state.currentPatternSequenceIndex);
+        return this.setPatternSequenceIndex(this.state.currentPatternSequenceIndex - 1);
     };
 
     previousRow(): boolean {
         if(!this.setRowIndex(this.state.currentRowIndex - 1)) {
-            return this.previousPattern() && this.setRowIndex(this.state.rowsPerPattern - 1);
+            return this.previousPattern() && this.setRowIndex(this.song.rowsPerPattern - 1);
         }
         return true;
     };
 
     previousSubtrack(): boolean {
-        return this.setSubtrack(this.state.subtrack - 1);
+        return this.setSubtrack(this.state.currentSubtrack - 1);
     };
 
     previousTick(): boolean {
         if(!this.setTick(this.state.currentTick - 1)) {
-            return this.previousRow() && this.setTick(this.state.ticksPerRow - 1);
+            if(this.previousRow()) {
+                this.setTick(this.state.speed - 1);
+                return true;
+            }
+            else {
+                return false;
+            }
         }
-        return true;
-    };
-
-    pause(): void {
-        this.bufferSourceNode.stop();
-    };
-
-    play(): void {
-        this.bufferSourceNode.start();
+        else {
+            return true;
+        }
     };
 
     reset(): void {
@@ -144,13 +165,13 @@ export class Protracker extends Player {
             currentBufferSamplePosition: 0,
             currentPatternSequenceIndex: 0,
             currentRowIndex:             0,
+            currentSubtrack:             0,
             currentTickSamplePosition:   0,
             currentTick:                 0,
-            rowsPerPattern:              0,
+            rowsPerBeat:                 4,
             samplesPerTick:              0,
-            speed:                       0,
-            subtrack:                    0,
-            ticksPerRow:                 0,
+            speed:                       6,
+            tempo:                       125,
         };
 
         this.channels.forEach(channel => {
@@ -186,7 +207,7 @@ export class Protracker extends Player {
     };
 
     setTick(tick: number): boolean {
-        if(tick < this.state.ticksPerRow) {
+        if(tick < this.state.speed && tick >= 0) {
             this.state.currentTick = tick;
             this.state.currentBufferSamplePosition = 0;
             this.state.currentTickSamplePosition = 0;
@@ -271,18 +292,8 @@ export class Protracker extends Player {
         );
     };
 
-    private _createChannels(channelCount: number): void {
-        for(let i=0; i<channelCount; i++) {
-            this.channels.push(new ProtrackerChannel(
-                this.scriptProcessorNode.bufferSize,
-                appConstants.AUDIO_CONTEXT.sampleRate,
-                this.amigaClockSpeed
-            ));
-        }
-    };
-
     private _getCurrentPattern(): Instruction[][] {
-        return this.song.patterns[this.state.currentPatternSequenceIndex];
+        return this.song.patterns[this.song.patternSequence[this.state.currentPatternSequenceIndex]];
     };
 
     private _getCurrentRow(): Instruction[] {
@@ -316,5 +327,15 @@ export class Protracker extends Player {
         this.bufferSourceNode.buffer = this.buffer;
         this.bufferSourceNode.connect(this.scriptProcessorNode);
         //this.scriptProcessorNode.connect(appConstants.AUDIO_CONTEXT.destination);
+    };
+
+    private _setupChannels(channelCount: number): void {
+        for(let i=0; i<channelCount; i++) {
+            this.channels.push(new ProtrackerChannel(
+                this.scriptProcessorNode.bufferSize,
+                appConstants.AUDIO_CONTEXT.sampleRate,
+                this.amigaClockSpeed
+            ));
+        }
     };
 }
