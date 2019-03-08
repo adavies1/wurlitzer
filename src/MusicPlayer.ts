@@ -1,6 +1,7 @@
 import { AUDIO_CONTEXT } from './constants';
 import * as utils from './utils';
 
+import Player from './players/Player';
 import { Protracker } from './players/Protracker/Protracker';
 
 // Constants
@@ -12,8 +13,8 @@ const players = [
 export let currentPlayer: Protracker;
 
 // Public functions
-export function load(source: string | File) {
-    (typeof source === 'string' ? utils.loadFileFromUrl(source) : utils.loadFileFromDisk(source))
+export function load(source: string | File): Promise<Player> {
+    return (typeof source === 'string' ? utils.loadFileFromUrl(source) : utils.loadFileFromDisk(source))
     .then(fileData => {
         let fileCanBePlayed = false;
 

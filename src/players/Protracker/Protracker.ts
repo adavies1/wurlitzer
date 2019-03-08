@@ -31,9 +31,9 @@ export interface State {
     currentTickSamplePosition:   number,
     currentTick:                 number,
     rowsPerBeat:                 number,
-    samplesPerTick:              number,
+    samplesPerTick:              number, // 2500/bpm
     speed:                       number, // A.K.A ticks-per-row
-    tempo:                       number, // A.K.A beats-per-minue (BPM)
+    tempo:                       number, // A.K.A beats-per-minue (BPM).
 }
 
 export class Protracker extends Player {
@@ -174,6 +174,8 @@ export class Protracker extends Player {
             tempo:                       125,
         };
 
+        this.state.samplesPerTick = this._calculateSamplesPerTick();
+
         this.channels.forEach(channel => {
             channel.reset();
         });
@@ -209,7 +211,6 @@ export class Protracker extends Player {
     setTick(tick: number): boolean {
         if(tick < this.state.speed && tick >= 0) {
             this.state.currentTick = tick;
-            this.state.currentBufferSamplePosition = 0;
             this.state.currentTickSamplePosition = 0;
             return true;
         }
@@ -228,9 +229,9 @@ export class Protracker extends Player {
         const samplesToGenerate = this._calculateNumberOfSamplesToGenerate();
 
         // If this is the start of a new row, assign instruction data to channels
-        if(this.state.currentRowIndex === 0 && this.state.currentTick === 0 && this.state.currentTickSamplePosition === 0) {
+        if(this.state.currentTick === 0 && this.state.currentTickSamplePosition === 0) {
             this.channels.forEach((channel, index) => {
-                let instruction = this._getCurrentRow()[index];
+                const instruction = this._getCurrentRow()[index];
 
                 if(instruction.effect) {
                     channel.setEffect(instruction.effect);
@@ -278,6 +279,7 @@ export class Protracker extends Player {
         // Otherwise, downmix the channels to stereo (2 channels in the scriptProcessorNode)
         else {
             mergeChannelsToOutput(event.outputBuffer, this.channels);
+            this.state.currentBufferSamplePosition = 0;
         }
     };
 
@@ -287,17 +289,22 @@ export class Protracker extends Player {
      *****************************/
     private _calculateNumberOfSamplesToGenerate(): number {
         return Math.min(
-            this.scriptProcessorNode.bufferSize,
-            this.state.samplesPerTick - this.state.currentTickSamplePosition
+            this.state.samplesPerTick - this.state.currentTickSamplePosition,
+            this.scriptProcessorNode.bufferSize - this.state.currentBufferSamplePosition
         );
     };
+
+    private _calculateSamplesPerTick(): number {
+        const tickDurationMs = (2500 / this.state.tempo);
+        return Math.round(44010 * (tickDurationMs / 1000)); // FIXME: refactor 44010 to be getPlaybackSampleRate()
+    }
 
     private _getCurrentPattern(): Instruction[][] {
         return this.song.patterns[this.song.patternSequence[this.state.currentPatternSequenceIndex]];
     };
 
     private _getCurrentRow(): Instruction[] {
-        return this.song.patterns[this.state.currentPatternSequenceIndex][this.state.currentRowIndex];
+        return this._getCurrentPattern()[this.state.currentRowIndex];
     };
 
     private _goToNextPosition(): boolean {
@@ -326,7 +333,7 @@ export class Protracker extends Player {
         // Connect everything up
         this.bufferSourceNode.buffer = this.buffer;
         this.bufferSourceNode.connect(this.scriptProcessorNode);
-        //this.scriptProcessorNode.connect(appConstants.AUDIO_CONTEXT.destination);
+        this.scriptProcessorNode.connect(appConstants.AUDIO_CONTEXT.destination);
     };
 
     private _setupChannels(channelCount: number): void {
