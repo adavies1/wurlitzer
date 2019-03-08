@@ -211,6 +211,17 @@ export function getPatternSequence(fileData: ArrayBuffer): number[] {
     return patternSequence.slice(0, lastIndex + 1)
 };
 
+export function getRowsPerPattern(fileData: ArrayBuffer): number {
+    const signature = getSignature(fileData);
+
+    switch(signature) {
+        case 'M!K!':
+            return 128;
+        default:
+            return 64;
+    }
+};
+
 export function getSampleCount(): number {
     return 31;
 };

@@ -139,6 +139,16 @@ describe('ProtrackerReader tests', () => {
         });
     });
 
+    describe('getRowsPerPattern tests', () => {
+        it('Should return 128 when the protracker file signature is M!K!', () => {
+            // TODO
+        });
+
+        it('Should return 64 when the protracker file signature is not M!K!', () => {
+            expect(reader.getRowsPerPattern(modFileArrayBuffer)).to.equal(64);
+        });
+    });
+
     describe('getSamples tests', () => {
         it('Should return an array with 31 samples', () => {
             expect(reader.getSamples(modFileArrayBuffer).length).to.equal(31);
