@@ -15,7 +15,7 @@ export const EFFECT_CODES = {
     VOLUME_SLIDE_TONE_PORTAMENTO: '5',
     VOLUME_SLIDE_VIBRATO:         '6',
     TREMOLO:                      '7',
-    // UNUSED:                    '8',
+    SET_PANNING_POSITION:         '8', // Unused?
     SET_SAMPLE_OFFSET:            '9',
     VOLUME_SLIDE:                 '10',
     POSITION_JUMP:                '11',

@@ -256,6 +256,7 @@ export class Protracker extends Player {
                     effects.process(this.state, channel, channel.getEffect());
                 }
             });
+            this.state.samplesPerTick = this._calculateSamplesPerTick();
         }
 
         // Get channels to fill their buffers
