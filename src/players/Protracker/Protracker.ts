@@ -38,10 +38,10 @@ export interface State {
 
 export class Protracker extends Player {
     amigaClockSpeed     : number                = protrackerConstants.AMIGA_CLOCK_SPEED_PAL;
-    buffer              : AudioBuffer           = appConstants.AUDIO_CONTEXT.createBuffer(2, appConstants.AUDIO_CONTEXT.sampleRate, appConstants.AUDIO_CONTEXT.sampleRate);
-    bufferSourceNode    : AudioBufferSourceNode = appConstants.AUDIO_CONTEXT.createBufferSource();
+    buffer              : AudioBuffer;
+    bufferSourceNode    : AudioBufferSourceNode;
     channels            : ProtrackerChannel[]   = [];
-    scriptProcessorNode : ScriptProcessorNode   = appConstants.AUDIO_CONTEXT.createScriptProcessor(undefined, 1, 2);
+    scriptProcessorNode : ScriptProcessorNode;
     song                : Song;
     state               : State;
 
@@ -62,11 +62,6 @@ export class Protracker extends Player {
             title:           reader.getTitle(fileData),
         };
 
-        // Create channels and audio nodes
-        this._setupAudioNodes();
-        this._setupChannels(this.song.channelCount);
-
-        // Set state ready to start playback
         this.reset();
     };
 
@@ -84,7 +79,7 @@ export class Protracker extends Player {
 
     getPlaybackStatus(): appConstants.PlayerStatus {
         return this.status;
-    }
+    };
 
     getSong(): Song {
         return this.song;
@@ -117,15 +112,21 @@ export class Protracker extends Player {
 
     pause(): boolean {
         if(this.status === appConstants.PlayerStatus.PLAYING) {
+            this.scriptProcessorNode.disconnect(appConstants.AUDIO_CONTEXT.destination);
             this.status = appConstants.PlayerStatus.PAUSED;
-            this.bufferSourceNode.stop();
             return true;
         }
         return false;
     };
 
     play(): boolean {
-        this.bufferSourceNode.start();
+        try {
+            this.bufferSourceNode.start();
+        } catch(e) {
+            // You cant start the bufferSourceNode twice, it throws an error. Ignore.
+        }
+
+        this.scriptProcessorNode.connect(appConstants.AUDIO_CONTEXT.destination);
         this.status = appConstants.PlayerStatus.PLAYING;
         return true;
     };
@@ -161,11 +162,13 @@ export class Protracker extends Player {
     };
 
     reset(): void {
+        let i;
+
         this.state = {
             currentBufferSamplePosition: 0,
             currentPatternSequenceIndex: 0,
             currentRowIndex:             0,
-            currentSubtrack:             0,
+            currentSubtrack:             (this.state ? this.state.currentSubtrack : 0),
             currentTickSamplePosition:   0,
             currentTick:                 0,
             rowsPerBeat:                 4,
@@ -174,11 +177,11 @@ export class Protracker extends Player {
             tempo:                       125,
         };
 
-        this.state.samplesPerTick = this._calculateSamplesPerTick();
+        // Create channels and audio nodes
+        this._setupAudioNodes();
+        this._setupChannels(this.song.channelCount);
 
-        this.channels.forEach(channel => {
-            channel.reset();
-        });
+        this.state.samplesPerTick = this._calculateSamplesPerTick();
     };
 
     setAmigaClockSpeed(clockSpeed: protrackerConstants.AMIGA_CLOCK_SPEED): void {
@@ -325,19 +328,25 @@ export class Protracker extends Player {
     };
 
     private _setupAudioNodes(): void {
-        // Set bufferSoureNode to looping so that the bufferSourceNode never stops
+        // Create buffer used to store audio data
+        this.buffer = appConstants.AUDIO_CONTEXT.createBuffer(2, appConstants.AUDIO_CONTEXT.sampleRate, appConstants.AUDIO_CONTEXT.sampleRate);
+
+        // Create bufferSoureNode and set to looping so that the bufferSourceNode never stops
+        this.bufferSourceNode = appConstants.AUDIO_CONTEXT.createBufferSource();
         this.bufferSourceNode.loop = true;
 
-        // Add function to allow the scriptProcessorNode to process audio data
+        // Create scriptProcessorNode and add function to allow the scriptProcessorNode to process audio data
+        this.scriptProcessorNode = appConstants.AUDIO_CONTEXT.createScriptProcessor(undefined, 1, 2);
         this.scriptProcessorNode.onaudioprocess = this.onAudioProcess.bind(this);
 
-        // Connect everything up
+        // Connect everything up ready to connect to audio context
         this.bufferSourceNode.buffer = this.buffer;
         this.bufferSourceNode.connect(this.scriptProcessorNode);
-        this.scriptProcessorNode.connect(appConstants.AUDIO_CONTEXT.destination);
+        // this.scriptProcessorNode.connect(appConstants.AUDIO_CONTEXT.destination);
     };
 
     private _setupChannels(channelCount: number): void {
+        this.channels.length = 0;
         for(let i=0; i<channelCount; i++) {
             this.channels.push(new ProtrackerChannel(
                 this.scriptProcessorNode.bufferSize,
