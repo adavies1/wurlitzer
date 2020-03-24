@@ -10,7 +10,8 @@ export interface state {
     sampleHasEnded: boolean,
     sampleHasLooped: boolean,
     sampleIncrement: number,
-    samplePosition: number
+    samplePosition: number,
+    volume: number
 }
 
 export class ProtrackerChannel {
@@ -79,7 +80,8 @@ export class ProtrackerChannel {
             sampleHasEnded: false,
             sampleHasLooped: false,
             sampleIncrement: 0,
-            samplePosition: 0
+            samplePosition: 0,
+            volume: 64
         }
     };
 
@@ -107,6 +109,10 @@ export class ProtrackerChannel {
         this.state.samplePosition = 0;
     };
 
+    setVolume(volume: number): void {
+        this.state.volume = volume;
+    }
+
 
     /*****************************
      *     Private functions     *
@@ -127,7 +133,7 @@ export class ProtrackerChannel {
             const upperSample = this.state.sample.audio[Math.ceil(this.state.samplePosition)];
             const diff = upperSample - lowerSample;
 
-            return lowerSample + (fractionOfNextSample * diff);
+            return (lowerSample + (fractionOfNextSample * diff)) * (this.state.volume / 64);
         }
         else {
             return 0;
