@@ -300,7 +300,7 @@ export class Protracker extends Player {
 
     private _calculateSamplesPerTick(): number {
         const tickDurationMs = (2500 / this.state.tempo);
-        return Math.round(44010 * (tickDurationMs / 1000)); // FIXME: refactor 44010 to be getPlaybackSampleRate()
+        return Math.round(appConstants.AUDIO_CONTEXT.sampleRate * (tickDurationMs / 1000));
     }
 
     private _getCurrentPattern(): Instruction[][] {
