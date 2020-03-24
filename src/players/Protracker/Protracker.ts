@@ -241,6 +241,7 @@ export class Protracker extends Player {
                 }
                 if(instruction.period) {
                     channel.setPeriod(instruction.period);
+                    if(!instruction.sampleIndex) channel.setSample(channel.getSample());
                 }
                 if(instruction.sampleIndex) {
                     // A sampleIndex of 0 means no sample specified, which means that
