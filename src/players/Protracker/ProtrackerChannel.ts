@@ -5,6 +5,7 @@ export interface state {
     effect: EffectCode,
     finetune: number,
     frequency: number,
+    originalPeriod: number,
     period: number,
     sample: Sample,
     sampleHasEnded: boolean,
@@ -62,6 +63,10 @@ export class ProtrackerChannel {
         return this.state.finetune;
     };
 
+    getOriginalPeriod(): number {
+        return this.state.originalPeriod;
+    }
+
     getPeriod(): number {
         return this.state.period;
     };
@@ -75,6 +80,7 @@ export class ProtrackerChannel {
             effect: null,
             finetune: 0,
             frequency: 0,
+            originalPeriod: 0,
             period: 0,
             sample: null,
             sampleHasEnded: false,
@@ -93,6 +99,11 @@ export class ProtrackerChannel {
         this.state.finetune = finetune;
         this._calculateFrequency();
         this._calculateSampleIncrement();
+    };
+
+    setOriginalPeriod(period: number): void {
+        this.state.originalPeriod = period;
+        this.setPeriod(period);
     };
 
     setPeriod(period: number): void {
