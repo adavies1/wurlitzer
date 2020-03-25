@@ -1,7 +1,7 @@
 import { EffectCode } from './EffectCode.interface';
 
 export interface Instruction {
-    effect: EffectCode;
+    effect: EffectCode | undefined;
     period: number;
     sampleIndex: number;
 }

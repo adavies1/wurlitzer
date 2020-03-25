@@ -113,7 +113,7 @@ export class ProtrackerChannel {
         this.state.volume = this.state.sample ? this.state.sample.volume : 64;
     }
 
-    setEffect(effect: EffectCode): void {
+    setEffect(effect: EffectCode | undefined): void {
         this.state.effect = effect;
     };
 

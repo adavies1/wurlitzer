@@ -239,8 +239,9 @@ export class Protracker extends Player {
         // If this is the start of a tick, process effects for each channel
         if(this.state.currentTickSamplePosition === 0) {
             this.channels.forEach(channel => {
-                if(channel.getEffect() !== null) {
-                    effects.process(this, this.state, channel, channel.getEffect());
+                const channelEffect = channel.getEffect();
+                if(channelEffect) {
+                    effects.process(this, this.state, channel, channelEffect);
                 }
             });
             this.state.samplesPerTick = this._calculateSamplesPerTick();
@@ -279,9 +280,8 @@ export class Protracker extends Player {
         this.channels.forEach((channel, index) => {
             const instruction = row[index];
 
-            if(instruction.effect) {
-                channel.setEffect(instruction.effect);
-            }
+            channel.setEffect(instruction.effect);
+
             if(instruction.period) {
                 channel.setOriginalPeriod(instruction.period);
                 channel.resetSample();
