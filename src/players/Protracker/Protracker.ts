@@ -233,24 +233,7 @@ export class Protracker extends Player {
 
         // If this is the start of a new row, assign instruction data to channels
         if(this.state.currentTick === 0 && this.state.currentTickSamplePosition === 0) {
-            this.channels.forEach((channel, index) => {
-                const instruction = this._getCurrentRow()[index];
-
-                if(instruction.effect) {
-                    channel.setEffect(instruction.effect);
-                }
-                if(instruction.period) {
-                    channel.setPeriod(instruction.period);
-                    if(!instruction.sampleIndex) channel.setSample(channel.getSample());
-                }
-                if(instruction.sampleIndex) {
-                    // A sampleIndex of 0 means no sample specified, which means that
-                    // Effectively, the samples coming from the instructions are 1-based.
-                    // We have to handle this as the sample array is 0-based.
-                    channel.setSample(this.song.samples[instruction.sampleIndex - 1]);
-                    channel.setFinetune(this.song.samples[instruction.sampleIndex - 1].fineTune);
-                }
-            });
+            this._assignInstructionsToChannels(this._getCurrentRow());
         }
 
         // If this is the start of a tick, process effects for each channel
@@ -292,6 +275,28 @@ export class Protracker extends Player {
     /*****************************
      *     Private functions     *
      *****************************/
+    private _assignInstructionsToChannels(row: Instruction[]): void {
+        this.channels.forEach((channel, index) => {
+            const instruction = row[index];
+
+            if(instruction.effect) {
+                channel.setEffect(instruction.effect);
+            }
+            if(instruction.period) {
+                channel.setOriginalPeriod(instruction.period);
+                channel.resetSample();
+            }
+            if(instruction.sampleIndex) {
+                // A sampleIndex of 0 means no sample specified, which means that
+                // Effectively, the samples coming from the instructions are 1-based.
+                // We have to handle this as the sample array is 0-based.
+                channel.setSample(this.song.samples[instruction.sampleIndex - 1]);
+                channel.resetFinetune();
+                channel.resetVolume();
+            }
+        });
+    }
+
     private _calculateNumberOfSamplesToGenerate(): number {
         return Math.min(
             this.state.samplesPerTick - this.state.currentTickSamplePosition,
