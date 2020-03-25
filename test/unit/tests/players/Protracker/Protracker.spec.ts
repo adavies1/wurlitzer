@@ -84,8 +84,6 @@ describe('Protracker tests', () => {
             const success = protracker.nextPattern();
             const finalState = protracker.getPlaybackState();
 
-            console.log(finalState);
-
             expect(finalState.currentPatternSequenceIndex).to.equal(15);
             expect(finalState.currentRowIndex).to.equal(1);
             expect(finalState.currentTick).to.equal(1);
@@ -366,7 +364,6 @@ describe('Protracker tests', () => {
 
             protracker.reset();
             const finalState = protracker.getPlaybackState();
-            console.log('hello - ', finalState);
             expect(finalState).to.eql({
                 currentBufferSamplePosition: 0,
                 currentPatternSequenceIndex: 0,
@@ -375,7 +372,7 @@ describe('Protracker tests', () => {
                 currentTickSamplePosition:   0,
                 currentTick:                 0,
                 rowsPerBeat:                 4,
-                samplesPerTick:              0,
+                samplesPerTick:              960,
                 speed:                       6,
                 tempo:                       125,
             } as State);
