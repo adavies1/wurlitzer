@@ -174,12 +174,14 @@ export function getPatterns(fileData: ArrayBuffer): Instruction[][][] {
                 // Effect - get the lower 4 bits of byte 3 by using modulus 16.
                 top = view.getUint8(start + (i*64*channelCount*4) + (j*channelCount*4) + (k*4) + 2) % 16;
                 bottom =  view.getUint8(start + (i*64*channelCount*4) + (j*channelCount*4) + (k*4) + 3);
-                patterns[i][j][k].effect = {
-                    code: top,
-                    p:    bottom,
-                    px:   (bottom >> 4),
-                    py:   (bottom % 16)
-                };
+                if(top > 0 || bottom > 0) {
+                    patterns[i][j][k].effect = {
+                        code: top,
+                        p:    bottom,
+                        px:   (bottom >> 4),
+                        py:   (bottom % 16)
+                    };
+                }
             }
         }
     }

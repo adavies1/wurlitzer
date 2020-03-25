@@ -83,11 +83,11 @@ describe('ProtrackerReader tests', () => {
                 });
             });
 
-            it('Should have an effect object', () => {
+            it('May have an effect object', () => {
                 patterns.forEach(pattern => {
                     pattern.forEach(row => {
                         row.forEach(instruction => {
-                            expect(typeof instruction.effect).to.equal('object');
+                            expect(typeof instruction.effect).to.be.oneOf(['object', 'undefined']);
                         });
                     });
                 });
@@ -98,8 +98,10 @@ describe('ProtrackerReader tests', () => {
                     patterns.forEach(pattern => {
                         pattern.forEach(row => {
                             row.forEach(instruction => {
-                                expect(typeof instruction.effect.code).to.equal('number');
-                                expect(instruction.effect.code).to.be.within(0,15);
+                                if(instruction.effect) {
+                                    expect(typeof instruction.effect.code).to.equal('number');
+                                    expect(instruction.effect.code).to.be.within(0,15);
+                                }
                             });
                         });
                     });
@@ -109,11 +111,13 @@ describe('ProtrackerReader tests', () => {
                     patterns.forEach(pattern => {
                         pattern.forEach(row => {
                             row.forEach(instruction => {
-                                expect(typeof instruction.effect.p).to.equal('number');
-                                expect(typeof instruction.effect.px).to.equal('number');
-                                expect(instruction.effect.px).to.be.within(0,15);
-                                expect(typeof instruction.effect.py).to.equal('number');
-                                expect(instruction.effect.py).to.be.within(0,15);
+                                if(instruction.effect) {
+                                    expect(typeof instruction.effect.p).to.equal('number');
+                                    expect(typeof instruction.effect.px).to.equal('number');
+                                    expect(instruction.effect.px).to.be.within(0,15);
+                                    expect(typeof instruction.effect.py).to.equal('number');
+                                    expect(instruction.effect.py).to.be.within(0,15);
+                                }
                             });
                         });
                     });
