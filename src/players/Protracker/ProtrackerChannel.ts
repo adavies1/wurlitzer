@@ -75,6 +75,10 @@ export class ProtrackerChannel {
         return this.state.sample;
     };
 
+    getSamplePosition(): number {
+        return this.state.samplePosition;
+    }
+
     reset(): void {
         this.state = {
             effect: null,
@@ -90,6 +94,24 @@ export class ProtrackerChannel {
             volume: 64
         }
     };
+
+    resetFinetune() {
+        this.state.finetune = this.state.sample ? this.state.sample.fineTune : 0;
+    }
+
+    resetPeriod() {
+        this.setPeriod(this.state.originalPeriod);
+    }
+
+    resetSample() {
+        this.state.sampleHasEnded = false;
+        this.state.sampleHasLooped = false;
+        this.state.samplePosition = 0;
+    }
+
+    resetVolume() {
+        this.state.volume = this.state.sample ? this.state.sample.volume : 64;
+    }
 
     setEffect(effect: EffectCode): void {
         this.state.effect = effect;
@@ -116,9 +138,13 @@ export class ProtrackerChannel {
         this.state.sample = sample;
         this.state.sampleHasEnded = false;
         this.state.sampleHasLooped = false;
-        this._calculateSampleIncrement();
         this.state.samplePosition = 0;
+        this._calculateSampleIncrement();
     };
+
+    setSamplePosition(position: number): void {
+        this.state.samplePosition = position;
+    }
 
     setVolume(volume: number): void {
         this.state.volume = volume;
