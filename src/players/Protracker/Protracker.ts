@@ -240,7 +240,7 @@ export class Protracker extends Player {
         if(this.state.currentTickSamplePosition === 0) {
             this.channels.forEach(channel => {
                 if(channel.getEffect() !== null) {
-                    effects.process(this.state, channel, channel.getEffect());
+                    effects.process(this, this.state, channel, channel.getEffect());
                 }
             });
             this.state.samplesPerTick = this._calculateSamplesPerTick();
