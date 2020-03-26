@@ -273,8 +273,11 @@ export class Protracker extends Player {
                 });
             }
 
-            // Advance to the next position in the song
-            this._goToNextPosition();
+            // If the current song position was not altered by effects, advance to the next position
+            if (this._tickHasEnded()) {
+                console.log(`psi ${this.state.currentPatternSequenceIndex}, tick ${this.state.currentTick} ended normally, advancing...`);
+                this._goToNextPosition();
+            }
         }
 
         // If we need to generate more samples to fully fill the buffers, restart function
