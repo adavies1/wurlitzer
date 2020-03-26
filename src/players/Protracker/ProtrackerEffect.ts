@@ -44,6 +44,7 @@ export function process(player: Protracker, state: State, channel: ProtrackerCha
                 channel.setPeriod(channel.getPeriod() + effectCode.p);
                 break;
             case EFFECT_CODES.VOLUME_SLIDE:
+            case EFFECT_CODES.VOLUME_SLIDE_TONE_PORTAMENTO:
                 channel.setVolume(Math.min(channel.getVolume() + effectCode.px - effectCode.py, 64));
                 break;
         }
@@ -66,7 +67,8 @@ export function process(player: Protracker, state: State, channel: ProtrackerCha
             }
 
         case EFFECT_CODES.TONE_PORTAMENTO:
-            if (state.currentTick === 0) {
+        case EFFECT_CODES.VOLUME_SLIDE_TONE_PORTAMENTO:
+            if (code === EFFECT_CODES.TONE_PORTAMENTO && state.currentTick === 0) {
                 if(effectCode.p > 0) channel.setSlideRate(effectCode.p);
                 if(instruction.period) channel.setSlideTarget(instruction.period);
             }
