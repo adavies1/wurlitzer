@@ -209,6 +209,11 @@ export class Protracker extends Player {
         return false;
     };
 
+    setSampleFineTune(sample: Sample, fineTune: number) {
+        // TODO: This should really be a public function of a Sample class
+        sample.fineTune = fineTune;
+    }
+
     setSubtrack(index: number): boolean {
         // TODO: Add subtrack support
         return false;

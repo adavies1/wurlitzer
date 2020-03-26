@@ -20,6 +20,11 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
             player.setRowIndex((10 * effectCode.p) + effectCode.py);
             break;
 
+        case EFFECT_CODES.SET_FINE_TUNE:
+            const newFineTune = effectCode.py < 8 ? effectCode.py : -16 + effectCode.py;
+            player.setSampleFineTune(channel.getSample(), newFineTune);
+            break;
+
         case EFFECT_CODES.FINE_VOLUME_SLIDE_UP:
             channel.setVolume(Math.min(channel.getVolume() + effectCode.py, 64));
             break;
