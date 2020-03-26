@@ -14,6 +14,8 @@ export interface state {
     sampleHasLooped: boolean,
     sampleIncrement: number,
     samplePosition: number,
+    slideRate: number,
+    slideTarget: number,
     volume: number
 }
 
@@ -85,6 +87,14 @@ export class ProtrackerChannel {
         return this.state.samplePosition;
     }
 
+    getSlideRate(): number {
+        return this.state.slideRate;
+    }
+
+    getSlideTarget(): number {
+        return this.state.slideTarget;
+    }
+
     getVolume(): number {
         return this.state.volume;
     }
@@ -102,6 +112,8 @@ export class ProtrackerChannel {
             sampleHasLooped: false,
             sampleIncrement: 0,
             samplePosition: 0,
+            slideRate: 0,
+            slideTarget: 0,
             volume: 64
         }
     };
@@ -155,6 +167,14 @@ export class ProtrackerChannel {
 
     setSamplePosition(position: number): void {
         this.state.samplePosition = position;
+    }
+
+    setSlideRate(rate: number): void {
+        this.state.slideRate = rate;
+    }
+
+    setSlideTarget(target: number): void {
+        this.state.slideTarget = target;
     }
 
     setVolume(volume: number): void {

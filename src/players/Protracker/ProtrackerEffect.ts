@@ -65,5 +65,16 @@ export function process(player: Protracker, state: State, channel: ProtrackerCha
                 break;
             }
 
+        case EFFECT_CODES.TONE_PORTAMENTO:
+            if (state.currentTick === 0) {
+                if(effectCode.p > 0) channel.setSlideRate(effectCode.p);
+                if(instruction.period) channel.setSlideTarget(instruction.period);
+            }
+            if (channel.getPeriod() > channel.getSlideTarget()) {
+                channel.setPeriod(Math.max(channel.getPeriod() - channel.getSlideRate(), channel.getSlideTarget()));
+            } else if(channel.getPeriod() < channel.getSlideTarget()) {
+                channel.setPeriod(Math.min(channel.getPeriod() + channel.getSlideRate(), channel.getSlideTarget()));
+            }
+            break;
     }
 };

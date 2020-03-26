@@ -282,7 +282,7 @@ export class Protracker extends Player {
 
             channel.setInstruction(instruction);
 
-            if(instruction.period) {
+            if(instruction.period && (!instruction.effect || instruction.effect.code !== 3)) {
                 channel.setOriginalPeriod(instruction.period);
                 channel.resetSample();
             }
