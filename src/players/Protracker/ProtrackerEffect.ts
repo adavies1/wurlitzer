@@ -102,5 +102,11 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
                 channel.setSamplePosition(0);
             }
             break;
+
+        case EFFECT_CODES.NOTE_CUT:
+            if (state.currentTick === effectCode.py) {
+                channel.setVolume(0);
+            }
+            break;
     }
 };
