@@ -45,6 +45,7 @@ export function process(player: Protracker, state: State, channel: ProtrackerCha
                 break;
             case EFFECT_CODES.VOLUME_SLIDE:
             case EFFECT_CODES.VOLUME_SLIDE_TONE_PORTAMENTO:
+            case EFFECT_CODES.VOLUME_SLIDE_VIBRATO:
                 channel.setVolume(Math.min(channel.getVolume() + effectCode.px - effectCode.py, 64));
                 break;
         }
