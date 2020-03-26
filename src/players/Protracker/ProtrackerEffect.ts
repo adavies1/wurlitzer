@@ -96,5 +96,11 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
                 channel.setPeriod(Math.min(channel.getPeriod() + channel.getSlideRate(), channel.getSlideTarget()));
             }
             break;
+
+        case EFFECT_CODES.RETRIGGER_NOTE:
+            if (state.currentTick % effectCode.py === 0) {
+                channel.setSamplePosition(0);
+            }
+            break;
     }
 };
