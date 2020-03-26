@@ -14,6 +14,10 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
         case EFFECT_CODES.POSITION_JUMP:
             player.setPatternSequenceIndex(effectCode.p, true);
             break;
+        case EFFECT_CODES.PATTERN_BREAK:
+            player.nextPattern();
+            player.setRowIndex((10 * effectCode.p) + effectCode.py);
+            break;
     }
 }
 
@@ -32,10 +36,6 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
                 break;
             case EFFECT_CODES.SET_VOLUME:
                 channel.setVolume(effectCode.p);
-                break;
-            case EFFECT_CODES.PATTERN_BREAK:
-                player.nextPattern();
-                player.setRowIndex(effectCode.p);
                 break;
             case EFFECT_CODES.SET_SPEED:
                 if(effectCode.p > 31) {
