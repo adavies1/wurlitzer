@@ -79,6 +79,10 @@ export class ProtrackerChannel {
         return this.state.samplePosition;
     }
 
+    getVolume(): number {
+        return this.state.volume;
+    }
+
     reset(): void {
         this.state = {
             effect: null,

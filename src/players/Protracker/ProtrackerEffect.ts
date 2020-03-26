@@ -40,6 +40,9 @@ export function process(player: Protracker, state: State, channel: ProtrackerCha
             case EFFECT_CODES.PORTAMENTO_DOWN:
                 channel.setPeriod(channel.getPeriod() + effectCode.p);
                 break;
+            case EFFECT_CODES.VOLUME_SLIDE:
+                channel.setVolume(Math.min(channel.getVolume() + effectCode.px - effectCode.py, 64));
+                break;
         }
     }
 
