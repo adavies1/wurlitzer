@@ -21,31 +21,35 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
     }
 }
 
+export function onRowStart(player: Protracker, state: State, channel: ProtrackerChannel) {
+    const effectCode = channel.getEffect();
+    if(!effectCode) return;
+
+    const code = effectCode.code === 14 ? `${effectCode.code}-${effectCode.px}` : `${effectCode.code}`;
+
+    switch(code) {
+        case EFFECT_CODES.SET_SAMPLE_OFFSET:
+            channel.setSamplePosition(256 * effectCode.p);
+            break;
+        case EFFECT_CODES.SET_VOLUME:
+            channel.setVolume(effectCode.p);
+            break;
+        case EFFECT_CODES.SET_SPEED:
+            if(effectCode.p > 31) {
+                state.tempo = effectCode.p * state.rowsPerBeat;
+            } else {
+                state.speed = effectCode.py;
+            }
+            break;
+    }
+}
+
 export function onTickStart(player: Protracker, state: State, channel: ProtrackerChannel) {
     const effectCode = channel.getEffect();
     if(!effectCode) return;
 
     const instruction = channel.getInstruction();
     const code = effectCode.code === 14 ? `${effectCode.code}-${effectCode.px}` : `${effectCode.code}`;
-
-    // Codes that only trigger at the start of a row
-    if(state.currentTick === 0) {
-        switch(code) {
-            case EFFECT_CODES.SET_SAMPLE_OFFSET:
-                channel.setSamplePosition(256 * effectCode.p);
-                break;
-            case EFFECT_CODES.SET_VOLUME:
-                channel.setVolume(effectCode.p);
-                break;
-            case EFFECT_CODES.SET_SPEED:
-                if(effectCode.p > 31) {
-                    state.tempo = effectCode.p * state.rowsPerBeat;
-                } else {
-                    state.speed = effectCode.py;
-                }
-                break;
-        }
-    }
 
     // Codes that trigger on every tick except the first
     if(state.currentTick > 0) {

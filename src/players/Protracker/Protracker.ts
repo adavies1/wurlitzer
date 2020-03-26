@@ -162,8 +162,6 @@ export class Protracker extends Player {
     };
 
     reset(): void {
-        let i;
-
         this.state = {
             currentBufferSamplePosition: 0,
             currentPatternSequenceIndex: 0,
@@ -234,57 +232,29 @@ export class Protracker extends Player {
      *     Event functions     *
      ***************************/
     onAudioProcess(event: AudioProcessingEvent): void {
-        const samplesToGenerate = this._calculateNumberOfSamplesToGenerate();
-
-        // If this is the start of a new row, assign instruction data to channels
-        if(this.state.currentTick === 0 && this.state.currentTickSamplePosition === 0) {
+        if(this._isStartofRow()) {
             this._assignInstructionsToChannels(this._getCurrentRow());
+            this._processEffects(effects.onRowStart);
         }
 
-        // If this is the start of a tick, process effects for each channel
-        if(this.state.currentTickSamplePosition === 0) {
-            this.channels.forEach(channel => {
-                const channelEffect = channel.getEffect();
-                if(channelEffect) {
-                    effects.onTickStart(this, this.state, channel);
-                }
-            });
+        if(this._isStartOfTick()) {
+            this._processEffects(effects.onTickStart);
             this.state.samplesPerTick = this._calculateSamplesPerTick();
         }
 
-        // Get channels to fill their buffers
-        this.channels.forEach(channel => {
-            channel.fillBuffer(this.state.currentBufferSamplePosition, samplesToGenerate);
-        });
+        this._fillBuffers();
 
-        // Record that we have generated our samples
-        this.state.currentTickSamplePosition = this.state.currentTickSamplePosition + samplesToGenerate;
-        this.state.currentBufferSamplePosition = this.state.currentBufferSamplePosition + samplesToGenerate;
-
-        // If the tick has ended
-        if(this.state.currentTickSamplePosition === this.state.samplesPerTick) {
-            // Process any end-of-row effects if this is the end of the final tick
-            if (this.state.currentTick === this.state.speed - 1) {
-                this.channels.forEach(channel => {
-                    const channelEffect = channel.getEffect();
-                    if(channelEffect) {
-                        effects.onRowEnd(this, this.state, channel);
-                    }
-                });
-            }
-
-            // If the current song position was not altered by effects, advance to the next position
-            if (this._tickHasEnded()) {
-                console.log(`psi ${this.state.currentPatternSequenceIndex}, tick ${this.state.currentTick} ended normally, advancing...`);
-                this._goToNextPosition();
-            }
+        if (this._isEndOfRow()) {
+            this._processEffects(effects.onRowEnd);
         }
 
-        // If we need to generate more samples to fully fill the buffers, restart function
-        if(this.state.currentBufferSamplePosition !== this.scriptProcessorNode.bufferSize) {
+        if(this._isEndOfTick()) {
+            this._goToNextPosition();
+        }
+
+        if(!this._isBufferFull()) {
             this.onAudioProcess(event);
         }
-        // Otherwise, downmix the channels to stereo (2 channels in the scriptProcessorNode)
         else {
             mergeChannelsToOutput(event.outputBuffer, this.channels);
             this.state.currentBufferSamplePosition = 0;
@@ -329,6 +299,17 @@ export class Protracker extends Player {
         return Math.round(appConstants.AUDIO_CONTEXT.sampleRate * (tickDurationMs / 1000));
     }
 
+    private _fillBuffers(): void {
+        const samplesToGenerate = this._calculateNumberOfSamplesToGenerate();
+
+        this.channels.forEach(channel => {
+            channel.fillBuffer(this.state.currentBufferSamplePosition, samplesToGenerate);
+        });
+
+        this.state.currentTickSamplePosition = this.state.currentTickSamplePosition + samplesToGenerate;
+        this.state.currentBufferSamplePosition = this.state.currentBufferSamplePosition + samplesToGenerate;
+    }
+
     private _getCurrentPattern(): Instruction[][] {
         return this.song.patterns[this.song.patternSequence[this.state.currentPatternSequenceIndex]];
     };
@@ -352,6 +333,35 @@ export class Protracker extends Player {
             return nextPosition;
         }
     };
+
+    private _isEndOfRow(): boolean {
+        return this.state.currentTick === this.state.speed - 1 && this._isEndOfTick();
+    }
+
+    private _isEndOfTick(): boolean {
+        return this.state.currentTickSamplePosition === this.state.samplesPerTick;
+    }
+
+    private _isBufferFull(): boolean {
+        return this.state.currentBufferSamplePosition === this.scriptProcessorNode.bufferSize;
+    }
+
+    private _isStartofRow(): boolean {
+        return this.state.currentTick === 0 && this.state.currentTickSamplePosition === 0;
+    }
+
+    private _isStartOfTick(): boolean {
+        return this.state.currentTickSamplePosition === 0;
+    }
+
+    private _processEffects(effectProcessor: Function): void {
+        this.channels.forEach(channel => {
+            const channelEffect = channel.getEffect();
+            if(channelEffect) {
+                effectProcessor(this, this.state, channel);
+            }
+        });
+    }
 
     private _setupAudioNodes(): void {
         // Create buffer used to store audio data
