@@ -165,6 +165,10 @@ export class ProtrackerChannel {
         this._calculateSampleIncrement();
     };
 
+    setSampleAsEnded(): void {
+        this.state.sampleHasEnded = true;
+    }
+
     setSamplePosition(position: number): void {
         this.state.samplePosition = position;
     }
