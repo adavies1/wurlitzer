@@ -188,9 +188,14 @@ export class Protracker extends Player {
         this.amigaClockSpeed = clockSpeed;
     };
 
-    setPatternSequenceIndex(index: number): boolean {
+    setPatternSequenceIndex(index: number, zeroOnFail: boolean = false): boolean {
         if(this.song.patternSequence[index]) {
             this.state.currentPatternSequenceIndex = index;
+            this.setRowIndex(0);
+            return true;
+        }
+        if(zeroOnFail) {
+            this.state.currentPatternSequenceIndex = 0;
             this.setRowIndex(0);
             return true;
         }
@@ -241,7 +246,7 @@ export class Protracker extends Player {
             this.channels.forEach(channel => {
                 const channelEffect = channel.getEffect();
                 if(channelEffect) {
-                    effects.process(this, this.state, channel);
+                    effects.onTickStart(this, this.state, channel);
                 }
             });
             this.state.samplesPerTick = this._calculateSamplesPerTick();
@@ -256,8 +261,19 @@ export class Protracker extends Player {
         this.state.currentTickSamplePosition = this.state.currentTickSamplePosition + samplesToGenerate;
         this.state.currentBufferSamplePosition = this.state.currentBufferSamplePosition + samplesToGenerate;
 
-        // If the tick has ended, advance to the next position
+        // If the tick has ended
         if(this.state.currentTickSamplePosition === this.state.samplesPerTick) {
+            // Process any end-of-row effects if this is the end of the final tick
+            if (this.state.currentTick === this.state.speed - 1) {
+                this.channels.forEach(channel => {
+                    const channelEffect = channel.getEffect();
+                    if(channelEffect) {
+                        effects.onRowEnd(this, this.state, channel);
+                    }
+                });
+            }
+
+            // Advance to the next position in the song
             this._goToNextPosition();
         }
 

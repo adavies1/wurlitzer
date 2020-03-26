@@ -4,7 +4,20 @@ import { Protracker } from './Protracker';
 import { ProtrackerChannel } from './ProtrackerChannel';
 import { State } from './Protracker';
 
-export function process(player: Protracker, state: State, channel: ProtrackerChannel) {
+export function onRowEnd(player: Protracker, state: State, channel: ProtrackerChannel) {
+    const effectCode = channel.getEffect();
+    if(!effectCode) return;
+
+    const code = effectCode.code === 14 ? `${effectCode.code}-${effectCode.px}` : `${effectCode.code}`;
+
+    switch(code) {
+        case EFFECT_CODES.POSITION_JUMP:
+            player.setPatternSequenceIndex(effectCode.p, true);
+            break;
+    }
+}
+
+export function onTickStart(player: Protracker, state: State, channel: ProtrackerChannel) {
     const effectCode = channel.getEffect();
     if(!effectCode) return;
 
