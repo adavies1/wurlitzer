@@ -241,7 +241,7 @@ export class Protracker extends Player {
             this.channels.forEach(channel => {
                 const channelEffect = channel.getEffect();
                 if(channelEffect) {
-                    effects.process(this, this.state, channel, channelEffect);
+                    effects.process(this, this.state, channel);
                 }
             });
             this.state.samplesPerTick = this._calculateSamplesPerTick();
@@ -280,12 +280,13 @@ export class Protracker extends Player {
         this.channels.forEach((channel, index) => {
             const instruction = row[index];
 
-            channel.setEffect(instruction.effect);
+            channel.setInstruction(instruction);
 
             if(instruction.period) {
                 channel.setOriginalPeriod(instruction.period);
                 channel.resetSample();
             }
+
             if(instruction.sampleIndex) {
                 // A sampleIndex of 0 means no sample specified, which means that
                 // Effectively, the samples coming from the instructions are 1-based.

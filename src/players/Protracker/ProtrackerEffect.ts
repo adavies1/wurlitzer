@@ -1,11 +1,14 @@
-import { EffectCode } from './models/EffectCode.interface';
 import { EFFECT_CODES } from './constants';
 
 import { Protracker } from './Protracker';
 import { ProtrackerChannel } from './ProtrackerChannel';
 import { State } from './Protracker';
 
-export function process(player: Protracker, state: State, channel: ProtrackerChannel, effectCode: EffectCode) {
+export function process(player: Protracker, state: State, channel: ProtrackerChannel) {
+    const effectCode = channel.getEffect();
+    if(!effectCode) return;
+
+    const instruction = channel.getInstruction();
     const code = effectCode.code === 14 ? `${effectCode.code}-${effectCode.px}` : `${effectCode.code}`;
 
     // Codes that only trigger at the start of a row
@@ -61,5 +64,6 @@ export function process(player: Protracker, state: State, channel: ProtrackerCha
                 channel.setPeriod(channel.getOriginalPeriod() / Math.pow(2, effectCode.py / 12));
                 break;
             }
+
     }
 };

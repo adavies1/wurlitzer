@@ -1,10 +1,12 @@
 import { EffectCode } from './models/EffectCode.interface';
+import { Instruction } from './models/Instruction.interface';
 import { Sample } from './models/Sample.interface';
 
 export interface state {
     effect: EffectCode,
     finetune: number,
     frequency: number,
+    instruction: Instruction,
     originalPeriod: number,
     period: number,
     sample: Sample,
@@ -56,12 +58,16 @@ export class ProtrackerChannel {
     };
 
     getEffect(): EffectCode {
-        return this.state.effect;
+        return this.state.instruction ? this.state.instruction.effect : undefined;
     };
 
     getFinetune(): number {
         return this.state.finetune;
     };
+
+    getInstruction(): Instruction | undefined {
+        return this.state.instruction;
+    }
 
     getOriginalPeriod(): number {
         return this.state.originalPeriod;
@@ -88,6 +94,7 @@ export class ProtrackerChannel {
             effect: null,
             finetune: 0,
             frequency: 0,
+            instruction: undefined,
             originalPeriod: 0,
             period: 0,
             sample: null,
@@ -117,20 +124,20 @@ export class ProtrackerChannel {
         this.state.volume = this.state.sample ? this.state.sample.volume : 64;
     }
 
-    setEffect(effect: EffectCode | undefined): void {
-        this.state.effect = effect;
-    };
-
     setFinetune(finetune: number): void {
         this.state.finetune = finetune;
         this._calculateFrequency();
         this._calculateSampleIncrement();
     };
 
+    setInstruction(instruction: Instruction): void {
+        this.state.instruction = instruction;
+    }
+
     setOriginalPeriod(period: number): void {
         this.state.originalPeriod = period;
         this.setPeriod(period);
-    };
+    }
 
     setPeriod(period: number): void {
         this.state.period = period;

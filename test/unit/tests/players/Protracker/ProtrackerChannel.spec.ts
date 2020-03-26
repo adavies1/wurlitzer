@@ -48,8 +48,8 @@ describe('ProtrackerChannel tests', () => {
     });
 
     describe('getEffect tests', () => {
-        it('Should return null (default value)', () => {
-            expect(channel.getEffect()).to.equal(null);
+        it('Should return undefined (default value)', () => {
+            expect(channel.getEffect()).to.equal(undefined);
         });
     });
 
@@ -71,16 +71,21 @@ describe('ProtrackerChannel tests', () => {
         });
     });
 
-    describe('setEffect tests', () => {
-        it('Should set the given effect on the channel', () => {
-            let effect = {
-                code: 0,
-                p:    71,
-                px:   4,
-                py:   7
-            };
-            channel.setEffect(effect);
-            expect(channel.getEffect()).to.eql(effect);
+    describe('setInstruction tests', () => {
+        it('Should set the given instruction and effect on the channel', () => {
+            let instruction = {
+                effect: {
+                    code: 0,
+                    p:    71,
+                    px:   4,
+                    py:   7
+                },
+                period: 428,
+                sampleIndex: 1
+            }
+            channel.setInstruction(instruction);
+            expect(channel.getInstruction()).to.eql(instruction);
+            expect(channel.getEffect()).to.eql(instruction.effect);
         });
     });
 
