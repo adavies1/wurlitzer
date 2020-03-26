@@ -59,7 +59,7 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
             case EFFECT_CODES.VOLUME_SLIDE:
             case EFFECT_CODES.VOLUME_SLIDE_TONE_PORTAMENTO:
             case EFFECT_CODES.VOLUME_SLIDE_VIBRATO:
-                channel.setVolume(Math.min(channel.getVolume() + effectCode.px - effectCode.py, 64));
+                channel.setVolume(Math.max(Math.min(channel.getVolume() + effectCode.px - effectCode.py, 64), 0));
                 break;
         }
     }
