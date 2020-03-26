@@ -334,16 +334,16 @@ export class Protracker extends Player {
         }
     };
 
+    private _isBufferFull(): boolean {
+        return this.state.currentBufferSamplePosition === this.scriptProcessorNode.bufferSize;
+    }
+
     private _isEndOfRow(): boolean {
         return this.state.currentTick === this.state.speed - 1 && this._isEndOfTick();
     }
 
     private _isEndOfTick(): boolean {
         return this.state.currentTickSamplePosition === this.state.samplesPerTick;
-    }
-
-    private _isBufferFull(): boolean {
-        return this.state.currentBufferSamplePosition === this.scriptProcessorNode.bufferSize;
     }
 
     private _isStartofRow(): boolean {

@@ -14,9 +14,18 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
         case EFFECT_CODES.POSITION_JUMP:
             player.setPatternSequenceIndex(effectCode.p, true);
             break;
+
         case EFFECT_CODES.PATTERN_BREAK:
             player.nextPattern();
             player.setRowIndex((10 * effectCode.p) + effectCode.py);
+            break;
+
+        case EFFECT_CODES.FINE_VOLUME_SLIDE_UP:
+            channel.setVolume(Math.min(channel.getVolume() + effectCode.py, 64));
+            break;
+
+        case EFFECT_CODES.FINE_VOLUME_SLIDE_DOWN:
+            channel.setVolume(Math.max(channel.getVolume() - effectCode.py, 0));
             break;
     }
 }
@@ -31,9 +40,11 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
         case EFFECT_CODES.SET_SAMPLE_OFFSET:
             channel.setSamplePosition(256 * effectCode.p);
             break;
+
         case EFFECT_CODES.SET_VOLUME:
             channel.setVolume(effectCode.p);
             break;
+
         case EFFECT_CODES.SET_SPEED:
             if(effectCode.p > 31) {
                 state.tempo = effectCode.p * state.rowsPerBeat;
@@ -57,9 +68,11 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
             case EFFECT_CODES.PORTAMENTO_UP:
                 channel.setPeriod(channel.getPeriod() - effectCode.p);
                 break;
+
             case EFFECT_CODES.PORTAMENTO_DOWN:
                 channel.setPeriod(channel.getPeriod() + effectCode.p);
                 break;
+
             case EFFECT_CODES.VOLUME_SLIDE:
             case EFFECT_CODES.VOLUME_SLIDE_TONE_PORTAMENTO:
             case EFFECT_CODES.VOLUME_SLIDE_VIBRATO:
