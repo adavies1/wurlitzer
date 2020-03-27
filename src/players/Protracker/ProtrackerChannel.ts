@@ -4,10 +4,11 @@ import { Sample } from './models/Sample.interface';
 
 export interface state {
     effect: EffectCode,
-    finetune: number,
+    fineTune: number,
     frequency: number,
     instruction: Instruction,
     originalPeriod: number,
+    fineTunedPeriod: number,
     period: number,
     sample: Sample,
     sampleHasEnded: boolean,
@@ -63,8 +64,8 @@ export class ProtrackerChannel {
         return this.state.instruction ? this.state.instruction.effect : undefined;
     };
 
-    getFinetune(): number {
-        return this.state.finetune;
+    getFineTune(): number {
+        return this.state.fineTune;
     };
 
     getInstruction(): Instruction | undefined {
@@ -73,6 +74,10 @@ export class ProtrackerChannel {
 
     getOriginalPeriod(): number {
         return this.state.originalPeriod;
+    }
+
+    getFineTunedPeriod(): number {
+        return this.state.fineTunedPeriod;
     }
 
     getPeriod(): number {
@@ -102,10 +107,11 @@ export class ProtrackerChannel {
     reset(): void {
         this.state = {
             effect: null,
-            finetune: 0,
+            fineTune: 0,
             frequency: 0,
             instruction: undefined,
             originalPeriod: 0,
+            fineTunedPeriod: 0,
             period: 0,
             sample: null,
             sampleHasEnded: false,
@@ -118,12 +124,12 @@ export class ProtrackerChannel {
         }
     };
 
-    resetFinetune() {
-        this.state.finetune = this.state.sample ? this.state.sample.fineTune : 0;
+    resetFineTune() {
+        this.state.fineTune = this.state.sample ? this.state.sample.fineTune : 0;
     }
 
     resetPeriod() {
-        this.setPeriod(this.state.originalPeriod);
+        this.setPeriod(this.state.fineTunedPeriod);
     }
 
     resetSample() {
@@ -136,8 +142,8 @@ export class ProtrackerChannel {
         this.state.volume = this.state.sample ? this.state.sample.volume : 64;
     }
 
-    setFinetune(finetune: number): void {
-        this.state.finetune = finetune;
+    setFineTune(fineTune: number): void {
+        this.state.fineTune = fineTune;
         this._calculateFrequency();
         this._calculateSampleIncrement();
     };
@@ -148,7 +154,8 @@ export class ProtrackerChannel {
 
     setOriginalPeriod(period: number): void {
         this.state.originalPeriod = period;
-        this.setPeriod(period);
+        this._calculateFineTunedPeriod();
+        this.setPeriod(this.state.fineTunedPeriod);
     }
 
     setPeriod(period: number): void {
@@ -190,9 +197,24 @@ export class ProtrackerChannel {
      *     Private functions     *
      *****************************/
     _calculateFrequency(): void {
-        let finetunedPeriod = this.state.period * (Math.pow(2, (1/12 * this.state.finetune/8)));
-        this.state.frequency = this.amigaClockSpeed / (finetunedPeriod * 2);
+        this.state.frequency = this.amigaClockSpeed / (this.state.period * 2);
     };
+
+    _calculateFineTunedPeriod() {
+        const fineTune = this.state.fineTune || 0;
+        let period = this.state.originalPeriod;
+
+        if(fineTune !== 0) {
+            if (fineTune > 0) {
+                period = period / Math.pow(2, Math.abs(fineTune) / (8 * 12))
+            }
+            else {
+                period = period * Math.pow(2, Math.abs(fineTune) / (8 * 12))
+            }
+        }
+
+        this.state.fineTunedPeriod = period;
+    }
 
     _calculateSampleIncrement(): void {
         this.state.sampleIncrement = this.state.frequency / this.bufferFrequency;

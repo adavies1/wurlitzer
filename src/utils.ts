@@ -108,7 +108,7 @@ export function mergeChannelsToOutput(outputBuffer: AudioBuffer, channels: any[]
         for(i=0; i<speakerChannel.outputBuffer.length; i++) {
             speakerChannel.outputBuffer[i] = speakerChannel.mixChannelBuffers
                 .map(buffer => buffer[i])
-                .reduce((prev, val) => prev + val)
+                .reduce((prev, val) => prev + val, 0)
                 / mixDivider;
         }
     });

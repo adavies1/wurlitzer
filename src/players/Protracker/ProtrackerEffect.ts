@@ -102,11 +102,11 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
                 break;
             }
             if (state.currentTick % 3 === 1) {
-                channel.setPeriod(channel.getOriginalPeriod() / Math.pow(2, effectCode.px / 12));
+                channel.setPeriod(channel.getFineTunedPeriod() / Math.pow(2, effectCode.px / 12));
                 break;
             }
             if (state.currentTick % 3 === 2) {
-                channel.setPeriod(channel.getOriginalPeriod() / Math.pow(2, effectCode.py / 12));
+                channel.setPeriod(channel.getFineTunedPeriod() / Math.pow(2, effectCode.py / 12));
                 break;
             }
 

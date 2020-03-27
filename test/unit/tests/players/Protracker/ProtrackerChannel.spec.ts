@@ -55,7 +55,7 @@ describe('ProtrackerChannel tests', () => {
 
     describe('getFinetune tests', () => {
         it('Should return 0 (default value)', () => {
-            expect(channel.getFinetune()).to.equal(0);
+            expect(channel.getFineTune()).to.equal(0);
         });
     });
 
@@ -92,8 +92,8 @@ describe('ProtrackerChannel tests', () => {
     describe('setFinetune tests', () => {
         it('Should set the given finetune value on the channel', () => {
             let finetune = 4;
-            channel.setFinetune(finetune);
-            expect(channel.getFinetune()).to.equal(finetune);
+            channel.setFineTune(finetune);
+            expect(channel.getFineTune()).to.equal(finetune);
         });
     });
 
@@ -128,7 +128,7 @@ describe('ProtrackerChannel tests', () => {
 
         channel.setSample(sample);
         channel.setPeriod(4144);
-        channel.setFinetune(finetune);
+        channel.setFineTune(finetune);
 
         channel.fillBuffer(0, 3);
 

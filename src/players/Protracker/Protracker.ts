@@ -276,18 +276,18 @@ export class Protracker extends Player {
 
             channel.setInstruction(instruction);
 
-            if(instruction.period && (!instruction.effect || instruction.effect.code !== 3)) {
-                channel.setOriginalPeriod(instruction.period);
-                channel.resetSample();
-            }
-
             if(instruction.sampleIndex) {
                 // A sampleIndex of 0 means no sample specified, which means that
                 // Effectively, the samples coming from the instructions are 1-based.
                 // We have to handle this as the sample array is 0-based.
                 channel.setSample(this.song.samples[instruction.sampleIndex - 1]);
-                channel.resetFinetune();
+                channel.resetFineTune();
                 channel.resetVolume();
+            }
+
+            if(instruction.period && (!instruction.effect || instruction.effect.code !== 3)) {
+                channel.setOriginalPeriod(instruction.period);
+                channel.resetSample();
             }
         });
     }
