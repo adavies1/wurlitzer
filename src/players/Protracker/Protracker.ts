@@ -7,7 +7,7 @@ import { Sample } from './models/Sample.interface';
 import Player from "../Player";
 import { ProtrackerChannel } from "./ProtrackerChannel";
 import * as reader from "./ProtrackerReader";
-import * as effects from './ProtrackerEffect';
+import * as effects from './effects';
 import { mergeChannelsToOutput } from '../../utils';
 
 export interface Song {
@@ -69,6 +69,7 @@ export class Protracker extends Player {
     /****************************
      *     Public functions     *
      ****************************/
+
     getChannels(): ProtrackerChannel[] {
         return this.channels;
     };
@@ -236,6 +237,7 @@ export class Protracker extends Player {
     /***************************
      *     Event functions     *
      ***************************/
+
     onAudioProcess(event: AudioProcessingEvent): void {
         if(this._isStartofRow()) {
             this._assignInstructionsToChannels(this._getCurrentRow());
@@ -270,6 +272,7 @@ export class Protracker extends Player {
     /*****************************
      *     Private functions     *
      *****************************/
+
     private _assignInstructionsToChannels(row: Instruction[]): void {
         this.channels.forEach((channel, index) => {
             const instruction = row[index];
@@ -284,7 +287,7 @@ export class Protracker extends Player {
                 channel.resetVolume();
             }
 
-            if(instruction.period && (!instruction.effect || instruction.effect.code !== 3)) {
+            if(instruction.period && !effects.isTonePortamento(instruction.effect)) {
                 channel.resetFineTune();
                 channel.setOriginalPeriod(instruction.period);
                 channel.resetSample();

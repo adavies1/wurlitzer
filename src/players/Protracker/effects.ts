@@ -3,6 +3,14 @@ import { EFFECT_CODES } from './constants';
 import { Protracker } from './Protracker';
 import { ProtrackerChannel } from './ProtrackerChannel';
 import { State } from './Protracker';
+import { EffectCode } from './models/EffectCode.interface';
+
+
+export function isTonePortamento(effect: EffectCode) {
+    if (!effect) return false;
+    const code = effect.code === 14 ? `${effect.code}-${effect.px}` : `${effect.code}`;
+    return code === EFFECT_CODES.TONE_PORTAMENTO || code === EFFECT_CODES.VOLUME_SLIDE_TONE_PORTAMENTO;
+}
 
 export function onRowEnd(player: Protracker, state: State, channel: ProtrackerChannel) {
     const effectCode = channel.getEffect();

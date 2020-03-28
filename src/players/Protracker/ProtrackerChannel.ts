@@ -39,6 +39,7 @@ export class ProtrackerChannel {
     /****************************
      *     Public functions     *
      ****************************/
+
     fillBuffer(bufferStart: number, samplesToGenerate: number): void {
         const end = Math.min(bufferStart + samplesToGenerate, this.bufferLength);
         let i = bufferStart;
@@ -193,6 +194,7 @@ export class ProtrackerChannel {
     /*****************************
      *     Private functions     *
      *****************************/
+
     _calculateFrequency(): void {
         this.state.frequency = this.amigaClockSpeed / (this.state.period * 2);
     };
