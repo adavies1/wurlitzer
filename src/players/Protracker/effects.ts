@@ -41,6 +41,24 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
             channel.setFineTune(newFineTune);
             break;
 
+        case EFFECT_CODES.PATTERN_LOOP:
+            if(effectCode.py === 0) {
+                player.setPatternLoopRowIndex(player.getPlaybackState().currentRowIndex);
+            }
+            else {
+                const loopCount = player.getPatternLoopCount() - 1;
+                player.setPatternLoopCount(loopCount);
+
+                if (loopCount < 0) {
+                    player.setPatternLoopCount(effectCode.py);
+                }
+
+                if (loopCount !== 0) {
+                    player.setRowIndex(player.getPatternLoopRowIndex());
+                }
+            }
+            break;
+
         case EFFECT_CODES.FINE_VOLUME_SLIDE_UP:
             channel.setVolume(Math.min(channel.getVolume() + effectCode.py, 64));
             break;

@@ -30,6 +30,8 @@ export interface State {
     currentSubtrack:             number,
     currentTickSamplePosition:   number,
     currentTick:                 number,
+    patternLoopCount:            number,
+    patternLoopRowIndex:         number,
     rowsPerBeat:                 number,
     samplesPerTick:              number, // 2500/bpm
     speed:                       number, // A.K.A ticks-per-row
@@ -73,6 +75,14 @@ export class Protracker extends Player {
     getChannels(): ProtrackerChannel[] {
         return this.channels;
     };
+
+    getPatternLoopCount(): number {
+        return this.state.patternLoopCount;
+    }
+
+    getPatternLoopRowIndex(): number {
+        return this.state.patternLoopRowIndex;
+    }
 
     getPlaybackState(): State {
         return this.state
@@ -170,6 +180,8 @@ export class Protracker extends Player {
             currentSubtrack:             (this.state ? this.state.currentSubtrack : 0),
             currentTickSamplePosition:   0,
             currentTick:                 0,
+            patternLoopCount:            0,
+            patternLoopRowIndex:         0,
             rowsPerBeat:                 4,
             samplesPerTick:              0,
             speed:                       6,
@@ -186,6 +198,14 @@ export class Protracker extends Player {
     setAmigaClockSpeed(clockSpeed: protrackerConstants.AMIGA_CLOCK_SPEED): void {
         this.amigaClockSpeed = clockSpeed;
     };
+
+    setPatternLoopCount(count: number): void {
+        this.state.patternLoopCount = count;
+    }
+
+    setPatternLoopRowIndex(index: number): void {
+        this.state.patternLoopRowIndex = index;
+    }
 
     setPatternSequenceIndex(index: number, zeroOnFail: boolean = false): boolean {
         if(typeof this.song.patternSequence[index] !== 'undefined') {
@@ -204,6 +224,7 @@ export class Protracker extends Player {
     setRowIndex(index: number): boolean {
         if(this._getCurrentPattern()[index]) {
             this.state.currentRowIndex = index;
+            this.setPatternLoopRowIndex(0);
             this.setTick(0);
             return true;
         }
