@@ -281,11 +281,11 @@ export class Protracker extends Player {
                 // Effectively, the samples coming from the instructions are 1-based.
                 // We have to handle this as the sample array is 0-based.
                 channel.setSample(this.song.samples[instruction.sampleIndex - 1]);
-                channel.resetFineTune();
                 channel.resetVolume();
             }
 
             if(instruction.period && (!instruction.effect || instruction.effect.code !== 3)) {
+                channel.resetFineTune();
                 channel.setOriginalPeriod(instruction.period);
                 channel.resetSample();
             }

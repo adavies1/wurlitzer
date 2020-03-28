@@ -136,6 +136,7 @@ export class ProtrackerChannel {
         this.state.sampleHasEnded = false;
         this.state.sampleHasLooped = false;
         this.state.samplePosition = 0;
+        this._calculateSampleIncrement();
     }
 
     resetVolume() {
@@ -166,10 +167,6 @@ export class ProtrackerChannel {
 
     setSample(sample: Sample): void {
         this.state.sample = sample;
-        this.state.sampleHasEnded = false;
-        this.state.sampleHasLooped = false;
-        this.state.samplePosition = 0;
-        this._calculateSampleIncrement();
     };
 
     setSampleAsEnded(): void {
