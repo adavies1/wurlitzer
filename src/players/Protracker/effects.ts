@@ -48,7 +48,7 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
                     player.setPatternLoopCount(effectCode.py);
                 }
 
-                if (loopCount !== 0) {
+                if (loopCount > 0) {
                     player.setRowIndex(player.getPatternLoopRowIndex());
                 }
             }
