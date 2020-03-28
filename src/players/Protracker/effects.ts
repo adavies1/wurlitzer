@@ -38,7 +38,7 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
 
         case EFFECT_CODES.SET_FINE_TUNE:
             const newFineTune = effectCode.py < 8 ? effectCode.py : -16 + effectCode.py;
-            player.setSampleFineTune(channel.getSample(), newFineTune);
+            channel.setFineTune(newFineTune);
             break;
 
         case EFFECT_CODES.FINE_VOLUME_SLIDE_UP:
