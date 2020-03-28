@@ -12,7 +12,6 @@ export interface state {
     period: number,
     sample: Sample,
     sampleHasEnded: boolean,
-    sampleHasLooped: boolean,
     sampleIncrement: number,
     samplePosition: number,
     slideRate: number,
@@ -116,7 +115,6 @@ export class ProtrackerChannel {
             period: 0,
             sample: null,
             sampleHasEnded: false,
-            sampleHasLooped: false,
             sampleIncrement: 0,
             samplePosition: 0,
             slideRate: 0,
@@ -135,7 +133,6 @@ export class ProtrackerChannel {
 
     resetSample() {
         this.state.sampleHasEnded = false;
-        this.state.sampleHasLooped = false;
         this.state.samplePosition = 0;
         this._calculateSampleIncrement();
     }
@@ -241,8 +238,8 @@ export class ProtrackerChannel {
             let sampleEnd: number;
 
             // The end of the sample is different depending on if the sample is now looping or not
-            if(this.state.sampleHasLooped) {
-                sampleEnd = this.state.sample.repeatOffset + (this.state.sample.repeatLength);
+            if(this.state.sample.repeatLength > 2) {
+                sampleEnd = this.state.sample.repeatOffset + this.state.sample.repeatLength;
             }
             else {
                 sampleEnd = this.state.sample.length;
@@ -254,7 +251,6 @@ export class ProtrackerChannel {
             }
             else {
                 if(this.state.sample.repeatLength > 2) {
-                    this.state.sampleHasLooped = true;
                     this.state.samplePosition = this.state.sample.repeatOffset + (nextPosition - sampleEnd);
                 }
                 else {
