@@ -36,11 +36,6 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
             channel.setPeriod(channel.getPeriod() + effectCode.py);
             break;
 
-        case EFFECT_CODES.SET_FINE_TUNE:
-            const newFineTune = effectCode.py < 8 ? effectCode.py : -16 + effectCode.py;
-            channel.setFineTune(newFineTune);
-            break;
-
         case EFFECT_CODES.PATTERN_LOOP:
             if(effectCode.py === 0) {
                 player.setPatternLoopRowIndex(player.getPlaybackState().currentRowIndex);
@@ -82,6 +77,13 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
 
         case EFFECT_CODES.SET_VOLUME:
             channel.setVolume(effectCode.p);
+            break;
+
+        case EFFECT_CODES.SET_FINE_TUNE:
+            if (channel.getInstruction().period !== 0) {
+                const newFineTune = effectCode.py < 8 ? effectCode.py : -16 + effectCode.py;
+                channel.setFineTune(newFineTune);
+            }
             break;
 
         case EFFECT_CODES.SET_SPEED:

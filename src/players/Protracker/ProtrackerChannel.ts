@@ -146,6 +146,8 @@ export class ProtrackerChannel {
 
     setFineTune(fineTune: number): void {
         this.state.fineTune = fineTune;
+        this._calculateFineTunedPeriod();
+        this.setPeriod(this.state.fineTunedPeriod);
         this._calculateFrequency();
         this._calculateSampleIncrement();
     };
