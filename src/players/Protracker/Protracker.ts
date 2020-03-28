@@ -55,7 +55,7 @@ export class Protracker extends Player {
             patterns:        reader.getPatterns(fileData),
             patternSequence: reader.getPatternSequence(fileData),
             rowsPerPattern:  reader.getRowsPerPattern(fileData),
-            samples:         reader.getSamples(fileData),
+            samples:         reader.getSamples(fileData, true),
             signature:       reader.getSignature(fileData),
             songLength:      reader.getUsedPatternSequenceLength(fileData),
             songLoop:        reader.getSongLoopPatternSequenceIndex(fileData),

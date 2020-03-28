@@ -241,10 +241,10 @@ export class ProtrackerChannel {
 
             // The end of the sample is different depending on if the sample is now looping or not
             if(this.state.sampleHasLooped) {
-                sampleEnd = this.state.sample.repeatOffset + (this.state.sample.repeatLength - 1);
+                sampleEnd = this.state.sample.repeatOffset + (this.state.sample.repeatLength);
             }
             else {
-                sampleEnd = this.state.sample.length - 1;
+                sampleEnd = this.state.sample.length;
             }
 
             // Increment sample position
