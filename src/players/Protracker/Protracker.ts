@@ -30,6 +30,7 @@ export interface State {
     currentSubtrack:             number,
     currentTickSamplePosition:   number,
     currentTick:                 number,
+    patternDelay:                number; // In ticks
     patternLoopCount:            number,
     patternLoopRowIndex:         number,
     rowsPerBeat:                 number,
@@ -75,6 +76,10 @@ export class Protracker extends Player {
     getChannels(): ProtrackerChannel[] {
         return this.channels;
     };
+
+    getPatternDelay(): number {
+        return this.state.patternDelay;
+    }
 
     getPatternLoopCount(): number {
         return this.state.patternLoopCount;
@@ -180,6 +185,7 @@ export class Protracker extends Player {
             currentSubtrack:             (this.state ? this.state.currentSubtrack : 0),
             currentTickSamplePosition:   0,
             currentTick:                 0,
+            patternDelay:                -1,
             patternLoopCount:            0,
             patternLoopRowIndex:         0,
             rowsPerBeat:                 4,
@@ -198,6 +204,10 @@ export class Protracker extends Player {
     setAmigaClockSpeed(clockSpeed: protrackerConstants.AMIGA_CLOCK_SPEED): void {
         this.amigaClockSpeed = clockSpeed;
     };
+
+    setPatternDelay(ticks: number): void {
+        this.state.patternDelay = ticks;
+    }
 
     setPatternLoopCount(count: number): void {
         this.state.patternLoopCount = count;
@@ -255,19 +265,21 @@ export class Protracker extends Player {
      ***************************/
 
     onAudioProcess(event: AudioProcessingEvent): void {
-        if(this._isStartofRow()) {
-            this._assignInstructionsToChannels(this._getCurrentRow());
-            this._processEffects(effects.onRowStart);
-        }
+        if (!this._isDelayed()) {
+            if(this._isStartofRow()) {
+                this._assignInstructionsToChannels(this._getCurrentRow());
+                this._processEffects(effects.onRowStart);
+            }
 
-        if(this._isStartOfTick()) {
-            this._processEffects(effects.onTickStart);
-            this.state.samplesPerTick = this._calculateSamplesPerTick();
+            if(this._isStartOfTick()) {
+                this._processEffects(effects.onTickStart);
+                this.state.samplesPerTick = this._calculateSamplesPerTick();
+            }
         }
 
         this._fillBuffers();
 
-        if (this._isEndOfRow()) {
+        if (!this._isDelayed() && this._isEndOfRow()) {
             this._processEffects(effects.onRowEnd);
         }
 
@@ -343,7 +355,18 @@ export class Protracker extends Player {
     };
 
     private _goToNextPosition(): boolean {
-        let nextPosition = (
+        let nextPosition;
+
+        if(this._isDelayed()) {
+            const delay = this.getPatternDelay() - 1;
+            this.setPatternDelay(delay);
+            if(delay !== -1) {
+                this.state.currentTickSamplePosition = 0;
+                return true;
+            }
+        }
+
+        nextPosition = (
             this.setTick(this.state.currentTick + 1) ||
             this.setRowIndex(this.state.currentRowIndex + 1) ||
             this.setPatternSequenceIndex(this.state.currentPatternSequenceIndex + 1)
@@ -360,6 +383,10 @@ export class Protracker extends Player {
 
     private _isBufferFull(): boolean {
         return this.state.currentBufferSamplePosition === this.scriptProcessorNode.bufferSize;
+    }
+
+    private _isDelayed(): boolean {
+        return this._isEndOfRow() && this.getPatternDelay() >= 0;
     }
 
     private _isEndOfRow(): boolean {

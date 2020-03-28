@@ -61,6 +61,10 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
         case EFFECT_CODES.FINE_VOLUME_SLIDE_DOWN:
             channel.setVolume(Math.max(channel.getVolume() - effectCode.py, 0));
             break;
+
+        case EFFECT_CODES.PATTERN_DELAY:
+            player.setPatternDelay(effectCode.py * player.state.speed);
+            break;
     }
 }
 
