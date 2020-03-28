@@ -228,12 +228,13 @@ export function getSampleCount(): number {
     return 31;
 };
 
-export function getSamples(fileData: ArrayBuffer): Sample[] {
+export function getSamples(fileData: ArrayBuffer, addExtraEndSample: boolean = false): Sample[] {
     const channelCount = getChannelCount(fileData);
     const patternCount = getPatternCount(fileData);
     const samples: Sample[] = [];
 
     let audio;
+    let data;
     let header;
     let headerDataStartOffset = 20;
     let sampleAudioStartOffset = 20 + (30*31) + 1 + 1 + 128 + 4 + (patternCount * 64 * channelCount * 4);
@@ -248,7 +249,8 @@ export function getSamples(fileData: ArrayBuffer): Sample[] {
         headerDataStartOffset = headerDataStartOffset + 30;
 
         // Extract audio data - the length of the sample comes from the header
-        audio = _getSampleAudio(fileData.slice(sampleAudioStartOffset, sampleAudioStartOffset + header.length));
+        data = fileData.slice(sampleAudioStartOffset, sampleAudioStartOffset + header.length);
+        audio = _getSampleAudio(data, addExtraEndSample);
         sampleAudioStartOffset = sampleAudioStartOffset + header.length;
 
         // Concatenate and add to samples array
@@ -308,8 +310,8 @@ function _getFineTuneValue(rawInteger: number): number {
     }
 };
 
-function _getSampleAudio(sampleData: ArrayBuffer): Float32Array {
-    const float32Samples = new Float32Array(sampleData.byteLength);
+function _getSampleAudio(sampleData: ArrayBuffer, addExtraEndSample: boolean = false): Float32Array {
+    const float32Samples = new Float32Array(sampleData.byteLength + (addExtraEndSample ? 1 : 0));
     const view = new DataView(sampleData);
 
     let i;
@@ -317,6 +319,17 @@ function _getSampleAudio(sampleData: ArrayBuffer): Float32Array {
     // Run through samples and convert from signed 8-bit int to signed float32
     for(i=0; i<sampleData.byteLength; i++) {
         float32Samples[i] = view.getInt8(i) / 128.00;
+    }
+
+    // This is really confusing. Imagine you have a sample 8 bytes long. You can set the loop length to be 8,
+    // which you can image as 'a loop length of 8 eave sections' .However, you actually need 9 samples to be
+    // able to loop 8 wave sections. So, to sort this, we fudge it by duplicating the last sample. You can check
+    // milkytracker on this, it does the same. If you don't do this, very short looping samples will sound noticably
+    // higher pitched.
+    if(addExtraEndSample) {
+        if(addExtraEndSample) {
+            float32Samples[i] = float32Samples[i - 1];
+        }
     }
 
     return float32Samples;
