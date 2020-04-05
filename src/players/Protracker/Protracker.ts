@@ -97,6 +97,11 @@ export class Protracker extends Player {
         return this.status;
     };
 
+    getRowPosition(): number {
+        const currentSamples = (this.state.currentTick * this.state.samplesPerTick) + this.state.currentTickSamplePosition;
+        return currentSamples / (this.state.speed * this.state.samplesPerTick);
+    }
+
     getSong(): Song {
         return this.song;
     };
