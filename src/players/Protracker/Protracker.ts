@@ -241,10 +241,20 @@ export class Protracker extends Player {
         return false;
     };
 
+    setSpeed(speed: number) {
+        this.state.speed = speed;
+    }
+
     setSubtrack(index: number): boolean {
         // TODO: Add subtrack support
         return false;
     };
+
+    setTempo(tempo: number) {
+        console.log(`[SET TEMPO] - ${tempo}`);
+        this.state.tempo = tempo;
+        this.state.samplesPerTick = this._calculateSamplesPerTick();
+    }
 
     setTick(tick: number): boolean {
         if(tick < this.state.speed && tick >= 0) {
@@ -273,7 +283,6 @@ export class Protracker extends Player {
 
             if(this._isStartOfTick()) {
                 this._processEffects(effects.onTickStart);
-                this.state.samplesPerTick = this._calculateSamplesPerTick();
             }
         }
 

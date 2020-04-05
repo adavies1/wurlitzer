@@ -92,9 +92,9 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
 
         case EFFECT_CODES.SET_SPEED:
             if(effectCode.p > 31) {
-                state.tempo = effectCode.p * state.rowsPerBeat;
+                player.setTempo(effectCode.p);
             } else {
-                state.speed = effectCode.p;
+                player.setSpeed(effectCode.p);
             }
             break;
     }
