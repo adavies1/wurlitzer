@@ -1,7 +1,7 @@
 import { EffectCode } from './models/EffectCode.interface';
 import { Instruction } from './models/Instruction.interface';
 import { Sample } from './models/Sample.interface';
-import { VibratoParams } from './models/VibratoParams.interface';
+import { ProtrackerChannelVibrato } from './ProtrackerChannelVibrato';
 
 
 export interface state {
@@ -18,7 +18,7 @@ export interface state {
     samplePosition: number,
     slideRate: number,
     slideTarget: number,
-    vibrato: VibratoParams,
+    vibrato: ProtrackerChannelVibrato,
     volume: number
 }
 
@@ -103,28 +103,8 @@ export class ProtrackerChannel {
         return this.state.slideTarget;
     }
 
-    getVibratoAmplitude() {
-        return this.state.vibrato.amplitude;
-    }
-
-    getVibratoOffset() {
-        return this.state.vibrato.offset;
-    }
-
-    getVibratoOriginalPeriod() {
-        return this.state.vibrato.originalPeriod;
-    }
-
-    getVibratoOscillationsPerRow() {
-        return this.state.vibrato.oscillationsPerRow;
-    }
-
-    getVibratoRetrigger() {
-        return this.state.vibrato.retrigger;
-    }
-
-    getVibratoWaveGenerator() {
-        return this.state.vibrato.waveGenerator;
+    getVibrato(): ProtrackerChannelVibrato {
+        return this.state.vibrato;
     }
 
     getVolume(): number {
@@ -146,14 +126,7 @@ export class ProtrackerChannel {
             samplePosition: 0,
             slideRate: 0,
             slideTarget: 0,
-            vibrato: {
-                amplitude: 1,
-                offset: 0,
-                originalPeriod: undefined,
-                oscillationsPerRow: 1,
-                retrigger: false,
-                waveGenerator: undefined
-            },
+            vibrato: new ProtrackerChannelVibrato,
             volume: 64
         }
     };
@@ -218,34 +191,6 @@ export class ProtrackerChannel {
 
     setSlideTarget(target: number): void {
         this.state.slideTarget = target;
-    }
-
-    setVibratoAmplitude(amplitude: number) {
-        if(amplitude > 0) {
-            this.state.vibrato.amplitude = amplitude;
-        }
-    }
-
-    setVibratoOffset(offset: number) {
-        this.state.vibrato.offset = offset;
-    }
-
-    setVibratoOriginalPeriod(period: number) {
-        this.state.vibrato.originalPeriod = period;
-    }
-
-    setVibratoOscillationsPerRow(oscillationsPerRow: number) {
-        if(oscillationsPerRow > 0) {
-            this.state.vibrato.oscillationsPerRow = oscillationsPerRow;
-        }
-    }
-
-    setVibratoRetrigger(retrigger: boolean) {
-        this.state.vibrato.retrigger = retrigger;
-    }
-
-    setVibratoWaveGenerator(waveGenerator: Function) {
-        this.state.vibrato.waveGenerator = waveGenerator;
     }
 
     setVolume(volume: number): void {

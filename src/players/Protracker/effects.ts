@@ -6,10 +6,6 @@ import { State } from './Protracker';
 import { EffectCode } from './models/EffectCode.interface';
 
 
-export function generateSineWave(rowPosition: number, offset: number = 0, oscillationsPerRow: number = 1, amplitude: number = 1) {
-    return Math.sin(((rowPosition * oscillationsPerRow) + offset) * 2 * Math.PI ) * amplitude;
-}
-
 export function isTonePortamento(effect: EffectCode) {
     if (!effect) return false;
     const code = effect.code === 14 ? `${effect.code}-${effect.px}` : `${effect.code}`;
@@ -25,10 +21,11 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
     switch(code) {
         case EFFECT_CODES.VIBRATO:
         case EFFECT_CODES.VOLUME_SLIDE_VIBRATO:
-            if(channel.getVibratoRetrigger() === false) {
-                channel.setVibratoOffset((channel.getVibratoOffset() + channel.getVibratoOscillationsPerRow()) % 1);
+            const vibrato = channel.getVibrato();
+            if(vibrato.getRetrigger() === false) {
+                vibrato.setOffset((vibrato.getOffset() + vibrato.getOscillationsPerRow()) % 1);
             }
-            channel.setPeriod(channel.getVibratoOriginalPeriod());
+            channel.setPeriod(channel.getOriginalPeriod());
             break;
 
         case EFFECT_CODES.POSITION_JUMP:
@@ -88,10 +85,10 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
 
     switch(code) {
         case EFFECT_CODES.VIBRATO:
-            channel.setVibratoOriginalPeriod(channel.getPeriod());
-            channel.setVibratoAmplitude(effectCode.py * 2);
-            channel.setVibratoOscillationsPerRow((effectCode.px * (state.speed - 1)) / 64);
-            channel.setVibratoWaveGenerator(channel.getVibratoWaveGenerator() || generateSineWave);
+            const vibrato = channel.getVibrato();
+            vibrato.setOriginalPeriod(channel.getPeriod());
+            vibrato.setAmplitude(effectCode.py * 2);
+            vibrato.setOscillationsPerRow((effectCode.px * (state.speed - 1)) / 64);
             break;
 
         case EFFECT_CODES.SET_SAMPLE_OFFSET:
@@ -176,13 +173,8 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
 
         case EFFECT_CODES.VIBRATO:
             case EFFECT_CODES.VOLUME_SLIDE_VIBRATO:
-                const adjustment = channel.getVibratoWaveGenerator()(
-                    player.getRowPosition(),
-                    channel.getVibratoOffset(),
-                    channel.getVibratoOscillationsPerRow(),
-                    channel.getVibratoAmplitude()
-                );
-                channel.setPeriod(channel.getVibratoOriginalPeriod() + adjustment);
+                const adjustment = channel.getVibrato().getValue(player.getRowPosition());
+                channel.setPeriod(channel.getOriginalPeriod() + adjustment);
                 break;
 
         case EFFECT_CODES.RETRIGGER_NOTE:
