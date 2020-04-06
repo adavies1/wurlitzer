@@ -1,12 +1,12 @@
-import { Vibrato } from './models/Vibrato.interface';
+import { Oscillator } from './models/Oscillator.interface';
 import { WaveGenerator } from './models/WaveGenerator.interface';
 import { WaveType } from './models/WaveType.interface';
 import { pickRandom } from '../../utils';
 
-export class ProtrackerChannelVibrato implements Vibrato {
+export class ProtrackerOscillator implements Oscillator {
     amplitude: number = 1;
     offset: number = 0;
-    originalPeriod: number;
+    originalValue: number;
     oscillationsPerRow: number = 1;
     retrigger: boolean = false;
     waveGenerator: WaveGenerator = generateSineWave;
@@ -19,8 +19,8 @@ export class ProtrackerChannelVibrato implements Vibrato {
         return this.offset;
     }
 
-    getOriginalPeriod() {
-        return this.originalPeriod;
+    getOriginalValue() {
+        return this.originalValue;
     }
 
     getOscillationsPerRow() {
@@ -32,7 +32,7 @@ export class ProtrackerChannelVibrato implements Vibrato {
     }
 
     getPeriod(rowPosition: number): number {
-        return this.originalPeriod + this.waveGenerator(rowPosition, this.offset, this.oscillationsPerRow, this.amplitude);
+        return this.originalValue + this.waveGenerator(rowPosition, this.offset, this.oscillationsPerRow, this.amplitude);
     }
 
     getWaveGenerator() {
@@ -53,8 +53,8 @@ export class ProtrackerChannelVibrato implements Vibrato {
         this.offset = offset;
     }
 
-    setOriginalPeriod(period: number) {
-        this.originalPeriod = period;
+    setOriginalValue(period: number) {
+        this.originalValue = period;
     }
 
     setOscillationsPerRow(oscillationsPerRow: number) {

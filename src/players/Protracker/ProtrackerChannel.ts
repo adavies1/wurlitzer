@@ -1,7 +1,7 @@
 import { EffectCode } from './models/EffectCode.interface';
 import { Instruction } from './models/Instruction.interface';
 import { Sample } from './models/Sample.interface';
-import { ProtrackerChannelVibrato } from './ProtrackerChannelVibrato';
+import { ProtrackerOscillator } from './ProtrackerOscillator';
 
 
 export interface state {
@@ -18,7 +18,7 @@ export interface state {
     samplePosition: number,
     slideRate: number,
     slideTarget: number,
-    vibrato: ProtrackerChannelVibrato,
+    vibrato: ProtrackerOscillator,
     volume: number
 }
 
@@ -103,7 +103,7 @@ export class ProtrackerChannel {
         return this.state.slideTarget;
     }
 
-    getVibrato(): ProtrackerChannelVibrato {
+    getVibrato(): ProtrackerOscillator {
         return this.state.vibrato;
     }
 
@@ -126,7 +126,7 @@ export class ProtrackerChannel {
             samplePosition: 0,
             slideRate: 0,
             slideTarget: 0,
-            vibrato: new ProtrackerChannelVibrato,
+            vibrato: new ProtrackerOscillator,
             volume: 64
         }
     };

@@ -26,7 +26,7 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
             if(vibrato.getRetrigger() === false) {
                 vibrato.incrementOffset();
             }
-            channel.setPeriod(vibrato.getOriginalPeriod());
+            channel.setPeriod(vibrato.getOriginalValue());
             break;
 
         case EFFECT_CODES.POSITION_JUMP:
@@ -87,7 +87,7 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
 
     switch(code) {
         case EFFECT_CODES.VIBRATO:
-            vibrato.setOriginalPeriod(channel.getPeriod());
+            vibrato.setOriginalValue(channel.getPeriod());
             vibrato.setAmplitude(effectCode.py * 2);
             vibrato.setOscillationsPerRow((effectCode.px * (state.speed - 1)) / 64);
             break;

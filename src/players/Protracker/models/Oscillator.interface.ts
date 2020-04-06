@@ -1,9 +1,9 @@
 import { WaveGenerator } from './WaveGenerator.interface';
 
-export interface Vibrato {
+export interface Oscillator {
     amplitude: number,
     offset: number,
-    originalPeriod: number,
+    originalValue: number,
     oscillationsPerRow: number,
     retrigger: boolean,
     waveGenerator: WaveGenerator
