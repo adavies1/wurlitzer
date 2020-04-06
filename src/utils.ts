@@ -46,6 +46,17 @@ export function loadFileFromUrl(source: string): Promise<ArrayBuffer> {
     });
 };
 
+export function pickRandom(...params: any[]) {
+    return params[randomInt(params.length)];
+}
+
+/**
+ * Given a max of 3, it will return 0,1,2
+ */
+export function randomInt(max: number): number {
+    return Math.floor(Math.random() * Math.floor(max));
+}
+
 export function readBigEndian16bitInt(arrayBuffer: ArrayBuffer, offset: number) {
     return new DataView(arrayBuffer).getUint16(offset, false);
 };

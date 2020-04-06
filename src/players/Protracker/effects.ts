@@ -4,6 +4,7 @@ import { Protracker } from './Protracker';
 import { ProtrackerChannel } from './ProtrackerChannel';
 import { State } from './Protracker';
 import { EffectCode } from './models/EffectCode.interface';
+import { WAVE_TYPES } from './constants';
 
 
 export function isTonePortamento(effect: EffectCode) {
@@ -17,15 +18,15 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
     if(!effectCode) return;
 
     const code = effectCode.code === 14 ? `${effectCode.code}-${effectCode.px}` : `${effectCode.code}`;
+    const vibrato = channel.getVibrato();
 
     switch(code) {
         case EFFECT_CODES.VIBRATO:
         case EFFECT_CODES.VOLUME_SLIDE_VIBRATO:
-            const vibrato = channel.getVibrato();
             if(vibrato.getRetrigger() === false) {
-                vibrato.setOffset((vibrato.getOffset() + vibrato.getOscillationsPerRow()) % 1);
+                vibrato.incrementOffset();
             }
-            channel.setPeriod(channel.getOriginalPeriod());
+            channel.setPeriod(vibrato.getOriginalPeriod());
             break;
 
         case EFFECT_CODES.POSITION_JUMP:
@@ -82,10 +83,10 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
     if(!effectCode) return;
 
     const code = effectCode.code === 14 ? `${effectCode.code}-${effectCode.px}` : `${effectCode.code}`;
+    const vibrato = channel.getVibrato();
 
     switch(code) {
         case EFFECT_CODES.VIBRATO:
-            const vibrato = channel.getVibrato();
             vibrato.setOriginalPeriod(channel.getPeriod());
             vibrato.setAmplitude(effectCode.py * 2);
             vibrato.setOscillationsPerRow((effectCode.px * (state.speed - 1)) / 64);
@@ -97,6 +98,15 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
 
         case EFFECT_CODES.SET_VOLUME:
             channel.setVolume(effectCode.p);
+            break;
+
+        case EFFECT_CODES.SET_VIBRATO_WAVEFORM:
+            if(effectCode.py > 7) break;
+            const typeCode = effectCode.py >= 4 ? effectCode.py - 4 : effectCode.py;
+            const retrigger = effectCode.py < 4;
+            const generator = WAVE_TYPES[typeCode];
+            vibrato.setWaveGenerator(generator);
+            vibrato.setRetrigger(retrigger);
             break;
 
         case EFFECT_CODES.SET_FINE_TUNE:
@@ -122,6 +132,7 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
 
     const instruction = channel.getInstruction();
     const code = effectCode.code === 14 ? `${effectCode.code}-${effectCode.px}` : `${effectCode.code}`;
+    const vibrato = channel.getVibrato();
 
     // Codes that trigger on every tick except the first
     if(state.currentTick > 0) {
@@ -173,8 +184,7 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
 
         case EFFECT_CODES.VIBRATO:
             case EFFECT_CODES.VOLUME_SLIDE_VIBRATO:
-                const adjustment = channel.getVibrato().getValue(player.getRowPosition());
-                channel.setPeriod(channel.getOriginalPeriod() + adjustment);
+                channel.setPeriod(vibrato.getPeriod(player.getRowPosition()));
                 break;
 
         case EFFECT_CODES.RETRIGGER_NOTE:

@@ -1,0 +1,1 @@
+export type WaveType = 'random' | 'sawtooth' | 'sine' | 'square';

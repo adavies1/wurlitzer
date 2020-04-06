@@ -1,3 +1,5 @@
+import { WaveType } from "./models/WaveType.interface";
+
 export const AMIGA_CLOCK_SPEED_NTSC = 7159090.5;
 export const AMIGA_CLOCK_SPEED_PAL = 7093789.2;
 
@@ -39,5 +41,7 @@ export const EFFECT_CODES = {
     FUNKREPEAT:                   '14-15',
     SET_SPEED:                    '15',
 };
+
+export const WAVE_TYPES: WaveType[] = ['sine', 'sawtooth', 'square', 'random']; // Do not re-order!
 
 export const UNKNOWN_FORMAT = 'Unknown format';

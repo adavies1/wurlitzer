@@ -1,5 +1,7 @@
 import { Vibrato } from './models/Vibrato.interface';
 import { WaveGenerator } from './models/WaveGenerator.interface';
+import { WaveType } from './models/WaveType.interface';
+import { pickRandom } from '../../utils';
 
 export class ProtrackerChannelVibrato implements Vibrato {
     amplitude: number = 1;
@@ -29,12 +31,16 @@ export class ProtrackerChannelVibrato implements Vibrato {
         return this.retrigger;
     }
 
-    getValue(rowPosition: number): number {
-        return this.waveGenerator(rowPosition, this.offset, this.oscillationsPerRow, this.amplitude);
+    getPeriod(rowPosition: number): number {
+        return this.originalPeriod + this.waveGenerator(rowPosition, this.offset, this.oscillationsPerRow, this.amplitude);
     }
 
     getWaveGenerator() {
         return this.waveGenerator;
+    }
+
+    incrementOffset() {
+        this.offset = (this.offset + this.oscillationsPerRow) % 1;
     }
 
     setAmplitude(amplitude: number) {
@@ -61,11 +67,34 @@ export class ProtrackerChannelVibrato implements Vibrato {
         this.retrigger = retrigger;
     }
 
-    setWaveGenerator(waveGenerator: WaveGenerator) {
-        this.waveGenerator = waveGenerator; // FIXME
+    setWaveGenerator(type: WaveType) {
+        switch(type) {
+            case 'random':
+                this.setWaveGenerator(pickRandom('sawtooth', 'sine', 'square'));
+                break;
+            case 'sawtooth':
+                this.waveGenerator = generateSawtoothWave;
+                break;
+            case 'sine':
+                this.waveGenerator = generateSineWave;
+                break;
+            case 'square':
+                this.waveGenerator = generateSquareWave;
+                break;
+        }
     }
+}
+
+export const generateSawtoothWave : WaveGenerator = (rowPosition, offset = 0, oscillationsPerRow = 1, amplitude = 1) => {
+    const position = ((rowPosition * oscillationsPerRow) + offset) % 1;
+    return (1 - position) * amplitude;
 }
 
 export const generateSineWave : WaveGenerator = (rowPosition, offset = 0, oscillationsPerRow = 1, amplitude = 1) => {
     return Math.sin(((rowPosition * oscillationsPerRow) + offset) * 2 * Math.PI ) * amplitude;
+}
+
+export const generateSquareWave : WaveGenerator = (rowPosition, offset = 0, oscillationsPerRow = 1, amplitude = 1) => {
+    const position = ((rowPosition * oscillationsPerRow) + offset) % 1;
+    return (position < 0.5 ? 1 : -1) * amplitude;
 }
