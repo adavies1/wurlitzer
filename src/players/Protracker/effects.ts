@@ -5,6 +5,7 @@ import { ProtrackerChannel } from './ProtrackerChannel';
 import { State } from './Protracker';
 import { EffectCode } from './models/EffectCode.interface';
 import { WAVE_TYPES } from './constants';
+import { ProtrackerOscillator } from './ProtrackerOscillator';
 
 
 export function isTonePortamento(effect: EffectCode) {
@@ -18,6 +19,7 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
     if(!effectCode) return;
 
     const code = effectCode.code === 14 ? `${effectCode.code}-${effectCode.px}` : `${effectCode.code}`;
+    const tremolo = channel.getTremolo();
     const vibrato = channel.getVibrato();
 
     switch(code) {
@@ -27,6 +29,13 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
                 vibrato.incrementOffset();
             }
             channel.setPeriod(vibrato.getOriginalValue());
+            break;
+
+        case EFFECT_CODES.TREMOLO:
+            if(tremolo.getRetrigger() === false) {
+                tremolo.incrementOffset();
+            }
+            channel.setVolume(tremolo.getOriginalValue());
             break;
 
         case EFFECT_CODES.POSITION_JUMP:
@@ -83,6 +92,7 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
     if(!effectCode) return;
 
     const code = effectCode.code === 14 ? `${effectCode.code}-${effectCode.px}` : `${effectCode.code}`;
+    const tremolo = channel.getTremolo();
     const vibrato = channel.getVibrato();
 
     switch(code) {
@@ -90,6 +100,12 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
             vibrato.setOriginalValue(channel.getPeriod());
             vibrato.setAmplitude(effectCode.py * 2);
             vibrato.setOscillationsPerRow((effectCode.px * (state.speed - 1)) / 64);
+            break;
+
+        case EFFECT_CODES.TREMOLO:
+            tremolo.setOriginalValue(channel.getVolume());
+            tremolo.setAmplitude(effectCode.py * 2);
+            tremolo.setOscillationsPerRow((effectCode.px * (state.speed - 1)) / 64);
             break;
 
         case EFFECT_CODES.SET_SAMPLE_OFFSET:
@@ -102,11 +118,7 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
 
         case EFFECT_CODES.SET_VIBRATO_WAVEFORM:
             if(effectCode.py > 7) break;
-            const typeCode = effectCode.py >= 4 ? effectCode.py - 4 : effectCode.py;
-            const retrigger = effectCode.py < 4;
-            const generator = WAVE_TYPES[typeCode];
-            vibrato.setWaveGenerator(generator);
-            vibrato.setRetrigger(retrigger);
+            setOscillatorWaveform(vibrato, effectCode.py);
             break;
 
         case EFFECT_CODES.SET_FINE_TUNE:
@@ -114,6 +126,11 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
                 const newFineTune = effectCode.py < 8 ? effectCode.py : -16 + effectCode.py;
                 channel.setFineTune(newFineTune);
             }
+            break;
+
+        case EFFECT_CODES.SET_TREMOLO_WAVEFORM:
+            if(effectCode.py > 7) break;
+            setOscillatorWaveform(tremolo, effectCode.py);
             break;
 
         case EFFECT_CODES.SET_SPEED:
@@ -132,6 +149,7 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
 
     const instruction = channel.getInstruction();
     const code = effectCode.code === 14 ? `${effectCode.code}-${effectCode.px}` : `${effectCode.code}`;
+    const tremolo = channel.getTremolo();
     const vibrato = channel.getVibrato();
 
     // Codes that trigger on every tick except the first
@@ -183,9 +201,13 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
             break;
 
         case EFFECT_CODES.VIBRATO:
-            case EFFECT_CODES.VOLUME_SLIDE_VIBRATO:
-                channel.setPeriod(vibrato.getPeriod(player.getRowPosition()));
-                break;
+        case EFFECT_CODES.VOLUME_SLIDE_VIBRATO:
+            channel.setPeriod(vibrato.getValue(player.getRowPosition()));
+            break;
+
+        case EFFECT_CODES.TREMOLO:
+            channel.setVolume(tremolo.getValue(player.getRowPosition()));
+            break;
 
         case EFFECT_CODES.RETRIGGER_NOTE:
             if (state.currentTick % effectCode.py === 0) {
@@ -210,3 +232,11 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
     }
 };
 
+export function setOscillatorWaveform(oscillator: ProtrackerOscillator, param: number) {
+    const typeCode = param >= 4 ? param - 4 : param;
+    const retrigger = param < 4;
+    const generator = WAVE_TYPES[typeCode];
+
+    oscillator.setWaveGenerator(generator);
+    oscillator.setRetrigger(retrigger);
+};

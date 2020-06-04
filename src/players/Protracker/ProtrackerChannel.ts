@@ -18,6 +18,7 @@ export interface state {
     samplePosition: number,
     slideRate: number,
     slideTarget: number,
+    tremolo: ProtrackerOscillator,
     vibrato: ProtrackerOscillator,
     volume: number
 }
@@ -103,6 +104,10 @@ export class ProtrackerChannel {
         return this.state.slideTarget;
     }
 
+    getTremolo(): ProtrackerOscillator {
+        return this.state.tremolo;
+    }
+
     getVibrato(): ProtrackerOscillator {
         return this.state.vibrato;
     }
@@ -126,6 +131,7 @@ export class ProtrackerChannel {
             samplePosition: 0,
             slideRate: 0,
             slideTarget: 0,
+            tremolo: new ProtrackerOscillator,
             vibrato: new ProtrackerOscillator,
             volume: 64
         }

@@ -31,7 +31,7 @@ export class ProtrackerOscillator implements Oscillator {
         return this.retrigger;
     }
 
-    getPeriod(rowPosition: number): number {
+    getValue(rowPosition: number): number {
         return this.originalValue + this.waveGenerator(rowPosition, this.offset, this.oscillationsPerRow, this.amplitude);
     }
 
