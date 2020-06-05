@@ -111,10 +111,6 @@ export class Protracker extends Player {
         return false;
     };
 
-    isFileSupported(fileData: ArrayBuffer): boolean {
-        return reader.isFileSupported(fileData);
-    };
-
     nextPattern(): boolean {
         return this.setPatternSequenceIndex(this.state.currentPatternSequenceIndex + 1);
     };

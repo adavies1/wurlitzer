@@ -56,14 +56,6 @@ describe('Protracker tests', () => {
         });
     });
 
-    describe('isFileSupported tests', () => {
-        // isFileSupported() is covered by tests in ProtrackerReader.spec, so we won't go into great depth here
-        it('should return a boolean flag indicating if the song is supported or not', () => {
-            expect(protracker.isFileSupported(fileData));
-            expect(!protracker.isFileSupported(new ArrayBuffer(8096)));
-        });
-    });
-
     describe('nextPattern tests', () => {
         it('should increment the pattern sequence index by 1 and set row and tick to 0', () => {
             protracker.setRowIndex(1);

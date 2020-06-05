@@ -5,7 +5,6 @@ export default abstract class Player {
 
     abstract getPlaybackStatus(): constants.PlayerStatus;
     abstract hasSubtracks(): boolean;
-    abstract isFileSupported(fileData: ArrayBuffer): boolean;
     abstract pause(): void;
     abstract play(): void;
     abstract previousSubtrack(): boolean;

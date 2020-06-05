@@ -225,4 +225,11 @@ describe('ProtrackerReader tests', () => {
             expect(reader.getUsedPatternSequenceLength(modFileArrayBuffer)).to.equal(16);
         });
     });
+
+    describe('isFileSupported tests', () => {
+        it('should return a boolean indicating if the song is supported or not', () => {
+            expect(reader.isFileSupported(modFileArrayBuffer));
+            expect(!reader.isFileSupported(new ArrayBuffer(8096)));
+        });
+    });
 });
