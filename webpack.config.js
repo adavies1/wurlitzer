@@ -2,7 +2,10 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
-    entry: './src/index.ts',
+    entry: {
+        main: './src/index.ts',
+        protracker: './src/players/Protracker/Protracker.ts'
+    },
     mode: 'production',
     module: {
         rules: [
