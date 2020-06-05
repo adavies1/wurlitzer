@@ -1,6 +1,6 @@
-import * as musicPlayer from './MusicPlayer';
+import load from './MusicPlayer';
 
-musicPlayer.load('test/unit/resources/Skid_Row2.mod')
+load('test/unit/resources/Skid_Row2.mod')
     .then(player => {
         console.log('ok!', player);
         document.getElementById('playButton').addEventListener('click', () => {

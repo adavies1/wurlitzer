@@ -92,6 +92,20 @@ export function getFormatDescription(fileData: ArrayBuffer): string {
 };
 
 /*
+    Returns the data required to create a new AudioWorkletNode
+    This allows the protracker playback code to be executed in its own thread
+*/
+export function getInitOptions(fileData: ArrayBuffer): AudioWorkletNodeOptions {
+    if(!isFileSupported(fileData)) throw new Error;
+    return {
+        numberOfOutputs: 4,
+        processorOptions: {
+            fileData: fileData
+        }
+    }
+}
+
+/*
     This scans through the pattern sequence table to find the highest pattern index.
     That is the number of patterns used by the module.
 
