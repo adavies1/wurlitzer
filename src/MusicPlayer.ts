@@ -14,7 +14,38 @@ export const players:PlayerInitInfo[] = [
 ]
 
 export class MusicPlayer {
+    player: AudioWorkletNode;
+    fileData: ArrayBuffer;
 
+    constructor(player: AudioWorkletNode, fileData: ArrayBuffer) {
+        this.player = player;
+        this.fileData = fileData;
+    }
+
+    pause() {
+        this.player.port.postMessage({cmd: 'pause'});
+    }
+    play() {
+        this.player.port.postMessage({cmd: 'play'});
+    }
+    previousSubtrack() {
+        this.player.port.postMessage({cmd: 'previousSubtrack'});
+    }
+    nextSubtrack() {
+        this.player.port.postMessage({cmd: 'nextSubtrack'});
+    }
+    reset() {
+        this.player.port.postMessage({cmd: 'reset'});
+    }
+    setSubtrack(index: number) {
+        this.player.port.postMessage({cmd: 'setSubtrack', data: index});
+    }
+    skipToPosition(newPosition: number) {
+        this.player.port.postMessage({cmd: 'skipToPosition', data: newPosition});
+    }
+    stop() {
+        this.player.port.postMessage({cmd: 'stop'});
+    }
 }
 
 
@@ -22,7 +53,7 @@ export class MusicPlayer {
 export default async function load(source: string | File): Promise<MusicPlayer> {
     const fileData = await _loadMusicFile(source);
     const player = await _loadPlayer(fileData);
-    return new MusicPlayer();
+    return new MusicPlayer(player, fileData);
 };
 
 
