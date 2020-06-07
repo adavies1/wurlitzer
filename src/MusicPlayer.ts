@@ -24,6 +24,13 @@ export class MusicPlayer {
         this.fileData = fileData;
     }
 
+    async load(source: string | File) {
+        const fileData = await _loadMusicFile(source);
+        const player = await _loadPlayer(fileData, this.audioContext);
+        this.stop();
+        this.player = player;
+        this.fileData = fileData;
+    }
     pause() {
         this.player.disconnect();
         this.playerConnected = false;
@@ -89,6 +96,11 @@ async function _loadPlayer(fileData: ArrayBuffer, audioContext: AudioContext): P
         throw new Error('This file is not supported');
     }
 
-    await audioContext.audioWorklet.addModule(requiredPlayer.path);
-    return new AudioWorkletNode(audioContext, requiredPlayer.name, requiredPlayer.options);
+    try {
+        return new AudioWorkletNode(audioContext, requiredPlayer.name, requiredPlayer.options);
+    }
+    catch(e) {
+        await audioContext.audioWorklet.addModule(requiredPlayer.path);
+        return new AudioWorkletNode(audioContext, requiredPlayer.name, requiredPlayer.options);
+    }
 }
