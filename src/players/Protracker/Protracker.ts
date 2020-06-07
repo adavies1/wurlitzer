@@ -5,10 +5,11 @@ import { Instruction } from './models/Instruction.interface';
 import { Sample } from './models/Sample.interface';
 
 import Player from "../Player";
-import { ProtrackerChannel } from "./ProtrackerChannel";
+import ProtrackerChannel from "./ProtrackerChannel";
 import * as reader from "./ProtrackerReader";
 import * as effects from './effects';
-import { mergeChannelsToOutput } from '../../utils';
+
+// import { mergeChannelsToOutput } from '../../utils';
 
 export interface Song {
     channelCount:    number;
@@ -39,17 +40,18 @@ export interface State {
     tempo:                       number, // A.K.A beats-per-minue (BPM).
 }
 
-export class Protracker extends Player {
+export default class Protracker extends Player {
     amigaClockSpeed     : number                = protrackerConstants.AMIGA_CLOCK_SPEED_PAL;
     buffer              : AudioBuffer;
-    bufferSourceNode    : AudioBufferSourceNode;
     channels            : ProtrackerChannel[]   = [];
-    scriptProcessorNode : ScriptProcessorNode;
     song                : Song;
     state               : State;
 
-    constructor(fileData: ArrayBuffer) {
+    constructor(audioContext: AudioContext, fileData: ArrayBuffer) {
         super();
+
+        // Store a reference to the audio context that this player is associated with
+        this.audioContext = audioContext;
 
         // Get all of the read-only properties of the song from the file
         this.song = {
@@ -129,7 +131,6 @@ export class Protracker extends Player {
 
     pause(): boolean {
         if(this.status === appConstants.PlayerStatus.PLAYING) {
-            this.scriptProcessorNode.disconnect(appConstants.AUDIO_CONTEXT.destination);
             this.status = appConstants.PlayerStatus.PAUSED;
             return true;
         }
@@ -137,13 +138,6 @@ export class Protracker extends Player {
     };
 
     play(): boolean {
-        try {
-            this.bufferSourceNode.start();
-        } catch(e) {
-            // You cant start the bufferSourceNode twice, it throws an error. Ignore.
-        }
-
-        this.scriptProcessorNode.connect(appConstants.AUDIO_CONTEXT.destination);
         this.status = appConstants.PlayerStatus.PLAYING;
         return true;
     };
@@ -196,7 +190,7 @@ export class Protracker extends Player {
         };
 
         // Create channels and audio nodes
-        this._setupAudioNodes();
+        // this._setupAudioNodes();
         this._setupChannels(this.song.channelCount);
 
         this.state.samplesPerTick = this._calculateSamplesPerTick();
@@ -275,7 +269,9 @@ export class Protracker extends Player {
      *     Event functions     *
      ***************************/
 
-    onAudioProcess(event: AudioProcessingEvent): void {
+    onAudioProcess(channelBuffers: Float32Array[]): boolean {
+        let stillMoreToPlay = true;
+
         if (!this._isDelayed()) {
             if(this._isStartofRow()) {
                 this._assignInstructionsToChannels(this._getCurrentRow());
@@ -287,23 +283,25 @@ export class Protracker extends Player {
             }
         }
 
-        this._fillBuffers();
+        this._fillBuffers(channelBuffers);
 
         if (!this._isDelayed() && this._isEndOfRow()) {
             this._processEffects(effects.onRowEnd);
         }
 
         if(this._isEndOfTick()) {
-            this._goToNextPosition();
+            stillMoreToPlay = this._goToNextPosition();
         }
 
-        if(!this._isBufferFull()) {
-            this.onAudioProcess(event);
+        if(!this._isBufferFull(channelBuffers[0].length)) {
+            stillMoreToPlay = this.onAudioProcess(channelBuffers);
         }
         else {
-            mergeChannelsToOutput(event.outputBuffer, this.channels);
+            // mergeChannelsToOutput(event.outputBuffer, this.channels);
             this.state.currentBufferSamplePosition = 0;
         }
+
+        return stillMoreToPlay;
     };
 
 
@@ -333,23 +331,23 @@ export class Protracker extends Player {
         });
     }
 
-    private _calculateNumberOfSamplesToGenerate(): number {
+    private _calculateNumberOfSamplesToGenerate(bufferSize: number): number {
         return Math.min(
             this.state.samplesPerTick - this.state.currentTickSamplePosition,
-            this.scriptProcessorNode.bufferSize - this.state.currentBufferSamplePosition
+            bufferSize - this.state.currentBufferSamplePosition
         );
     };
 
     private _calculateSamplesPerTick(): number {
         const tickDurationMs = (2500 / this.state.tempo);
-        return Math.round(appConstants.AUDIO_CONTEXT.sampleRate * (tickDurationMs / 1000));
+        return Math.round(this.audioContext.sampleRate * (tickDurationMs / 1000));
     }
 
-    private _fillBuffers(): void {
-        const samplesToGenerate = this._calculateNumberOfSamplesToGenerate();
+    private _fillBuffers(channelBuffers: Float32Array[]): void {
+        const samplesToGenerate = this._calculateNumberOfSamplesToGenerate(channelBuffers[0].length);
 
-        this.channels.forEach(channel => {
-            channel.fillBuffer(this.state.currentBufferSamplePosition, samplesToGenerate);
+        this.channels.forEach((channel, index) => {
+            channel.fillBuffer(channelBuffers[index], this.state.currentBufferSamplePosition, samplesToGenerate);
         });
 
         this.state.currentTickSamplePosition = this.state.currentTickSamplePosition + samplesToGenerate;
@@ -391,8 +389,8 @@ export class Protracker extends Player {
         }
     };
 
-    private _isBufferFull(): boolean {
-        return this.state.currentBufferSamplePosition === this.scriptProcessorNode.bufferSize;
+    private _isBufferFull(bufferSize: number): boolean {
+        return this.state.currentBufferSamplePosition === bufferSize;
     }
 
     private _isDelayed(): boolean {
@@ -424,32 +422,10 @@ export class Protracker extends Player {
         });
     }
 
-    private _setupAudioNodes(): void {
-        // Create buffer used to store audio data
-        this.buffer = appConstants.AUDIO_CONTEXT.createBuffer(2, appConstants.AUDIO_CONTEXT.sampleRate, appConstants.AUDIO_CONTEXT.sampleRate);
-
-        // Create bufferSoureNode and set to looping so that the bufferSourceNode never stops
-        this.bufferSourceNode = appConstants.AUDIO_CONTEXT.createBufferSource();
-        this.bufferSourceNode.loop = true;
-
-        // Create scriptProcessorNode and add function to allow the scriptProcessorNode to process audio data
-        this.scriptProcessorNode = appConstants.AUDIO_CONTEXT.createScriptProcessor(undefined, 1, 2);
-        this.scriptProcessorNode.onaudioprocess = this.onAudioProcess.bind(this);
-
-        // Connect everything up ready to connect to audio context
-        this.bufferSourceNode.buffer = this.buffer;
-        this.bufferSourceNode.connect(this.scriptProcessorNode);
-        // this.scriptProcessorNode.connect(appConstants.AUDIO_CONTEXT.destination);
-    };
-
     private _setupChannels(channelCount: number): void {
         this.channels.length = 0;
         for(let i=0; i<channelCount; i++) {
-            this.channels.push(new ProtrackerChannel(
-                this.scriptProcessorNode.bufferSize,
-                appConstants.AUDIO_CONTEXT.sampleRate,
-                this.amigaClockSpeed
-            ));
+            this.channels.push(new ProtrackerChannel(this.audioContext.sampleRate, this.amigaClockSpeed));
         }
     };
 }

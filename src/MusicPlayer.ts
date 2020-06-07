@@ -1,4 +1,3 @@
-import { AUDIO_CONTEXT } from './constants';
 import * as utils from './utils';
 import { PlayerInitInfo } from './models';
 
@@ -9,15 +8,18 @@ export const players:PlayerInitInfo[] = [
         name: 'protracker',
         getInitOptions: getProtrackerInitOptions,
         options: undefined,
-        path: '/dist/protracker.js'
+        path: '/dist/protracker.bundle.js'
     }
 ]
 
 export class MusicPlayer {
-    player: AudioWorkletNode;
+    audioContext: AudioContext;
     fileData: ArrayBuffer;
+    player: AudioWorkletNode;
+    playerConnected: boolean = false;
 
-    constructor(player: AudioWorkletNode, fileData: ArrayBuffer) {
+    constructor(audioContext: AudioContext, player: AudioWorkletNode, fileData: ArrayBuffer) {
+        this.audioContext = audioContext;
         this.player = player;
         this.fileData = fileData;
     }
@@ -26,6 +28,10 @@ export class MusicPlayer {
         this.player.port.postMessage({cmd: 'pause'});
     }
     play() {
+        if(!this.playerConnected) {
+            this.player.connect(this.audioContext.destination);
+            this.playerConnected = true;
+        }
         this.player.port.postMessage({cmd: 'play'});
     }
     previousSubtrack() {
@@ -51,9 +57,10 @@ export class MusicPlayer {
 
 // Public functions
 export default async function load(source: string | File): Promise<MusicPlayer> {
+    const audioContext = utils.createAudioContext();
     const fileData = await _loadMusicFile(source);
-    const player = await _loadPlayer(fileData);
-    return new MusicPlayer(player, fileData);
+    const player = await _loadPlayer(fileData, audioContext);
+    return new MusicPlayer(audioContext, player, fileData);
 };
 
 
@@ -62,7 +69,7 @@ async function _loadMusicFile(source: string | File): Promise<ArrayBuffer> {
     return (typeof source === 'string' ? utils.loadFileFromUrl(source) : utils.loadFileFromDisk(source))
 }
 
-async function _loadPlayer(fileData: ArrayBuffer): Promise<AudioWorkletNode> {
+async function _loadPlayer(fileData: ArrayBuffer, audioContext: AudioContext): Promise<AudioWorkletNode> {
     let requiredPlayer:PlayerInitInfo = undefined;
 
     players.forEach(player => {
@@ -78,6 +85,6 @@ async function _loadPlayer(fileData: ArrayBuffer): Promise<AudioWorkletNode> {
         throw new Error('This file is not supported');
     }
 
-    await AUDIO_CONTEXT.audioWorklet.addModule(requiredPlayer.path);
-    return new AudioWorkletNode(AUDIO_CONTEXT, requiredPlayer.name, requiredPlayer.options);
+    await audioContext.audioWorklet.addModule(requiredPlayer.path);
+    return new AudioWorkletNode(audioContext, requiredPlayer.name, requiredPlayer.options);
 }

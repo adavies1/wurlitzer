@@ -98,7 +98,8 @@ export function getFormatDescription(fileData: ArrayBuffer): string {
 export function getInitOptions(fileData: ArrayBuffer): AudioWorkletNodeOptions {
     if(!isFileSupported(fileData)) throw new Error;
     return {
-        numberOfOutputs: 4,
+        numberOfOutputs: 1,
+        outputChannelCount: [4],
         processorOptions: {
             fileData: fileData
         }

@@ -1,6 +1,7 @@
 import * as constants from '../constants';
 
 export default abstract class Player {
+    audioContext: AudioContext;
     status: constants.PlayerStatus = constants.PlayerStatus.STOPPED;
 
     abstract getPlaybackStatus(): constants.PlayerStatus;

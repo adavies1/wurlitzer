@@ -1,11 +1,11 @@
 import { EFFECT_CODES } from './constants';
 
-import { Protracker } from './Protracker';
-import { ProtrackerChannel } from './ProtrackerChannel';
+import Protracker from './Protracker';
+import ProtrackerChannel from './ProtrackerChannel';
 import { State } from './Protracker';
 import { EffectCode } from './models/EffectCode.interface';
 import { WAVE_TYPES } from './constants';
-import { ProtrackerOscillator } from './ProtrackerOscillator';
+import ProtrackerOscillator from './ProtrackerOscillator';
 
 
 export function isTonePortamento(effect: EffectCode) {

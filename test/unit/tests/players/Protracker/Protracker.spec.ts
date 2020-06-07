@@ -1,9 +1,9 @@
 import { use, expect } from 'chai';
-import { Protracker, State }  from '../../../../../src/players/Protracker/Protracker';
+import Protracker, { State }  from '../../../../../src/players/Protracker/Protracker';
 
 import * as testConstants from '../../../resources/constants';
 import * as utils from '../../../../../src/utils';
-import { ProtrackerChannel, state } from '../../../../../src/players/Protracker/ProtrackerChannel';
+import ProtrackerChannel, { state } from '../../../../../src/players/Protracker/ProtrackerChannel';
 
 describe('Protracker tests', () => {
     let fileData: ArrayBuffer;
@@ -17,7 +17,7 @@ describe('Protracker tests', () => {
     });
 
     beforeEach(() => {
-        protracker = new Protracker(fileData);
+        protracker = new Protracker(utils.createAudioContext(), fileData);
     })
 
     it('Should create a protracker instance', () => {

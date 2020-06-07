@@ -3,7 +3,7 @@ import { WaveGenerator } from './models/WaveGenerator.interface';
 import { WaveType } from './models/WaveType.interface';
 import { pickRandom } from '../../utils';
 
-export class ProtrackerOscillator implements Oscillator {
+export default class ProtrackerOscillator implements Oscillator {
     amplitude: number = 1;
     offset: number = 0;
     originalValue: number;

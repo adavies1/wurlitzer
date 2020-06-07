@@ -1,3 +1,9 @@
+export function createAudioContext(): AudioContext {
+    return typeof window  !== 'undefined'
+        ? new (window.AudioContext || (window as any).webkitAudioContext)()
+        : globalThis;
+}
+
 export function loadFileFromDisk(source: File): Promise<ArrayBuffer> {
     return new Promise((resolve: Function, reject: Function) => {
         const reader = new FileReader;

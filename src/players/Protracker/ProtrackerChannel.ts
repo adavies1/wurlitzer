@@ -1,7 +1,7 @@
 import { EffectCode } from './models/EffectCode.interface';
 import { Instruction } from './models/Instruction.interface';
 import { Sample } from './models/Sample.interface';
-import { ProtrackerOscillator } from './ProtrackerOscillator';
+import ProtrackerOscillator from './ProtrackerOscillator';
 
 
 export interface state {
@@ -23,18 +23,14 @@ export interface state {
     volume: number
 }
 
-export class ProtrackerChannel {
+export default class ProtrackerChannel {
     amigaClockSpeed: number;
-    buffer: Float32Array;
     bufferFrequency: number;
-    bufferLength: number;
     state: state;
 
-    constructor(bufferLength: number, bufferFrequency: number, amigaClockSpeed: number) {
+    constructor(bufferFrequency: number, amigaClockSpeed: number) {
         this.amigaClockSpeed = amigaClockSpeed;
-        this.buffer = new Float32Array(bufferLength);
         this.bufferFrequency = bufferFrequency;
-        this.bufferLength = bufferLength;
         this.reset();
     };
 
@@ -43,25 +39,21 @@ export class ProtrackerChannel {
      *     Public functions     *
      ****************************/
 
-    fillBuffer(bufferStart: number, samplesToGenerate: number): void {
-        const end = Math.min(bufferStart + samplesToGenerate, this.bufferLength);
+    fillBuffer(buffer: Float32Array, bufferStart: number, samplesToGenerate: number): void {
+        const end = Math.min(bufferStart + samplesToGenerate, buffer.length);
         let i = bufferStart;
 
         // For every sample we need to generate
         for(i; i < end; i++) {
             // Check that we have a sample assigned and that the sample hasn't ended
             if(this.state.sample !== null && !this.state.sampleHasEnded) {
-                this.buffer[i] = this._getSampleValue();
+                buffer[i] = this._getSampleValue();
                 this._incrementSamplePosition();
             }
             else {
-                this.buffer[i] = 0;
+                buffer[i] = 0;
             }
         }
-    };
-
-    getBuffer(): Float32Array {
-        return this.buffer;
     };
 
     getEffect(): EffectCode {
