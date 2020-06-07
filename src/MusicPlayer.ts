@@ -25,6 +25,8 @@ export class MusicPlayer {
     }
 
     pause() {
+        this.player.disconnect();
+        this.playerConnected = false;
         this.player.port.postMessage({cmd: 'pause'});
     }
     play() {
@@ -50,6 +52,8 @@ export class MusicPlayer {
         this.player.port.postMessage({cmd: 'skipToPosition', data: newPosition});
     }
     stop() {
+        this.player.disconnect();
+        this.playerConnected = false;
         this.player.port.postMessage({cmd: 'stop'});
     }
 }
