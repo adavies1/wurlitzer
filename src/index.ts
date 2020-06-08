@@ -1,4 +1,4 @@
-import load, { MusicPlayer } from './MusicPlayer';
+import MusicPlayer from './MusicPlayer';
 
 let player:MusicPlayer;
 
@@ -8,27 +8,20 @@ const pauseButton = document.getElementById('pauseButton');
 const stopButton = document.getElementById('stopButton');
 
 function loadSong(event: MouseEvent): void {
-    const loadFunc = typeof player === 'undefined' ? load : player.load;
-
     if(event.target instanceof Element) {
         if(typeof player === 'undefined') {
-            load(event.target.getAttribute('data-src'))
-                .then(musicPlayer => {
-                    player = musicPlayer;
-                    playButton.removeAttribute('disabled');
-                    pauseButton.removeAttribute('disabled');
-                    stopButton.removeAttribute('disabled');
-                })
-                .catch(err => {
-                    console.log('hmm...', err);
-                });
+            player = new MusicPlayer();
         }
-        else {
-            player.load(event.target.getAttribute('data-src'))
-                .catch(err => {
-                    console.log('hmm...', err);
-                });
-        }
+
+        player.load(event.target.getAttribute('data-src'))
+            .then(() => {
+                playButton.removeAttribute('disabled');
+                pauseButton.removeAttribute('disabled');
+                stopButton.removeAttribute('disabled');
+            })
+            .catch(err => {
+                console.log('hmm...', err);
+            });
     }
 };
 
