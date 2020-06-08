@@ -38,7 +38,7 @@ class ProtrackerAudioWorkletProcessor extends AudioWorkletProcessor {
     }
 
     process (inputs:Float32Array[][], outputs:Float32Array[][], parameters:Record<string, Float32Array>) {
-        return this.player.onAudioProcess(outputs[0]);
+        return this.player.onAudioProcess(outputs.map(output => output[0]));
     }
 
     onMessage = (event: any) => {
