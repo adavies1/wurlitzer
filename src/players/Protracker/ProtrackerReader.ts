@@ -28,7 +28,7 @@ export function getChannelCount(fileData: ArrayBuffer): number {
             channelCount = 2;
             break;
         default:
-            if(/^[0-9][0-9]CH$/.test(signature)) {
+            if(/^[0-9][0-9]C[H,N]$/.test(signature)) {
                 channelCount = parseInt(signature.substr(0,2));
             }
             else if(/^TDZ[0-9]$/.test(signature)) {
@@ -79,6 +79,9 @@ export function getFormatDescription(fileData: ArrayBuffer): string {
         default:
             if(/^[0-9][0-9]CH$/.test(signature)){
                 type = `FastTracker (${parseInt(signature.substr(0,2))} channels)`;
+            }
+            if(/^[0-9][0-9]CN$/.test(signature)){
+                type = `TakeTracker (${parseInt(signature.substr(0,2))} channels)`;
             }
             else if(/^TDZ[0-9]$/.test(signature)){
                 type = `TakeTracker (${parseInt(signature.substr(3))} channels)`;
