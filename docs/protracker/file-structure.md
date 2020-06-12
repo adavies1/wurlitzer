@@ -1,5 +1,6 @@
 
 
+
 # Protracker file structure
 
 This file tries to explain how a Protracker file is structured, allowing you to understand and decode it.
@@ -14,6 +15,10 @@ This file tries to explain how a Protracker file is structured, allowing you to 
     + [The old Noisetracker format](#the-old-noisetracker-format)
     + [Standard variations](#standard-variations)
     + [StarTrekker 8 Channel](#startrekker-8-channel)
+  * [Extra Tips](#extra-tips)
+    + [Obtaining the pattern count](#obtaining-the-pattern-count)
+    + [Endianness](#endianness)
+    + [Finetune values](#finetune-values)
 
 ## Overall structure
 
@@ -25,10 +30,10 @@ A complete Protracker file is structured the following way. Some sections requir
 | Sample info | 20 | 30\*31 | Information about each sample in the file (30 bytes per sample). See below for [sample info structure](#sample-info-structure).
 Pattern count | 950 | 1 | The number of patterns in the song as played. In other words, this is the number of slots used in the pattern table (this is **not** the same as the number of patterns in the file)
 Song end jump position | 951 | 1 | The position in the pattern table to jump to when the song ends (making the song loop)
-Pattern table | 952 | 128 | Pattern table. This is an array of pattern indexes, which tells you what order patterns should be played in (for example, you could have `0-1-1-2-3-1`, which would play pattern `1` three times in total).
+Pattern table | 952 | 128 | Pattern table. This is an array of pattern indexes, which tells you what order patterns should be played in (for example, you could have `[0,1,1,2,3,1]`, which would play pattern `1` three times in total).
 File format tag | 1080 | 4 | Four characters that form the file format tag, or 'signature' of the file. Most common is `M.K.`, but there are others. See [variations](#variations) below.
 Patterns | 1084 | (4\*CH\*64)\*? | All of the pattern data for the song. Think of a pattern like a sheet of music. The number of patterns in a file is variable, with a (theoretical) maximum of 256. This structure has variants. See [pattern structure](#pattern-structure) and [instruction structure](#instruction-structure) below.
-Samples | ??? | variable | All of the sample data for the samples.
+Samples | ??? | variable | All of the sample data for the samples. The length of this section is (obviously) variable.
 
 ### Sample info structure
 
@@ -43,7 +48,7 @@ Samples | ??? | variable | All of the sample data for the samples.
 
 ### Pattern structure
 
-As mentioned before, a pattern is a bit like a sheet of music, but more accurately it is like a spreadsheet. A song can (and will) have many of these. A row represents a set of instructions for each channel to do (including a note to play, and an effect to process), a column represents a channel, and a cell represents a single instruction. As the song plays, the rows are processed in order, until eventually all patterns have been processed (played), and then either loop or stop.
+As mentioned before, a pattern is a bit like a sheet of music, but more accurately it is like a spreadsheet. A song can (and will) have many of these. A row represents a set of instructions for each channel to do (including a note to play, and an effect to process), a column represents a channel, and a cell represents a single instruction. As the song plays, the rows are processed in order, until eventually all patterns have been processed (played), and then the song will either loop or stop.
 
                Channel 0       Channel 1          ...          Channel n
            +---------------------------------------------------------------+
@@ -121,3 +126,26 @@ There is the chance that the signature field has been hijacked completely, so be
 ### StarTrekker 8 Channel
 
 This variation uses the `FLT8` signature and has 8 channels per row. It follows the above format, but the twist is that instead of recording the row information for each channel sequentially, the pattern for channels 1-4 is stored and then the next pattern holds the data for channels 5-8. You'll probably want to merge these together while decoding the song, so that you can have a consistent structure for your playback routine.
+
+## Extra Tips
+
+Here are some extra bits of info that may help you along your way:
+
+### Obtaining the pattern count
+
+ * As per ByteRaver's notes in Thunder's doc, the best way to get the total number of patterns in a song is to read the pattern table and find the highest index and then add 1 (as the pattern indexes are zero-based). 
+ * If the above pattern count method ever fails (never has for me so far), you'll have to separate the header and the sample data, leaving just the pattern data chunk. Then, figure out how many channels you have based on the signature and use it to calculate the length of a pattern `patternLength = 4*channels*64` . Finally, divide the length of the pattern chunk by the pattern length you just calculated `numPatterns = patternChunk.length / patternLength`.
+
+### Endianness
+
+You'll notice that some of the values are **Big-endian word**, which means you need to be careful when decoding their values:
+ * Firstly a **word** is two bytes in length. 
+ * Endianness describes what each byte in the set (in this case, the word) signifies. On little-endian systems, the byte at the end (right-hand side) of the set signifies the smallest values, where as on big-endian systems, it is the other way around.  For more info on the subject, see [here](https://developer.mozilla.org/en-US/docs/Glossary/Endianness).
+
+**Example**: A word in memory is stored as `0000001 1100010`. On a little-endian system, this would signify `1*256 + 194 = 450`. On a big-endian system, this would signify `1 + 194*256 = 49665`. So, if you use the wrong endianness, you'll get the wrong numerical values when reading your data! 
+
+The reason why big-endian values are used is because the Amiga uses the Motorola 68K CPU, which is natively a big-endian architecture. Modern PC CPUs are little-endian.
+
+### Finetune values
+
+These are signed nibbles (signed 4-bit values). If you don't have an easy way to read these, read the value as an unsigned 8-bit integer and then do `-16 + value`. If you want to be extra safe and zero-out the higher 4 bits, you can either shift the value to the left by 4, and then back to the right by 4, or use modulus 16 `-16 + (value % 16)`. There are likely other ways (bit masks?) but as a JS programmer, this is how i'd do it.
