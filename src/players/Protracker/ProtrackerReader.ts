@@ -121,9 +121,7 @@ export function getPatternCount(fileData: ArrayBuffer): number {
     const patternSequence = getPatternSequence(fileData);
 
     // Pattern count is the largest pattern index + 1 (as patterns are zero-indexed)
-    return patternSequence.reduce((a,b) => {
-        return Math.max(a,b)
-    }) + 1;
+    return patternSequence.reduce((a,b) => Math.max(a,b)) + 1;
 };
 
 /*
