@@ -44,7 +44,7 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
 
         case EFFECT_CODES.PATTERN_BREAK:
             player.nextPattern();
-            player.setRowIndex((10 * effectCode.p) + effectCode.py);
+            player.setRowIndex((10 * effectCode.px) + effectCode.py);
             break;
 
         case EFFECT_CODES.FINE_PORTAMENTO_UP:
