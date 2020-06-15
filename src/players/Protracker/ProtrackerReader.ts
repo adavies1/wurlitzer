@@ -339,7 +339,7 @@ function _getSampleAudio(sampleData: ArrayBuffer, addExtraEndSample: boolean = f
     }
 
     // This is really confusing. Imagine you have a sample 8 bytes long. You can set the loop length to be 8,
-    // which you can image as 'a loop length of 8 eave sections' .However, you actually need 9 samples to be
+    // which you can image as 'a loop length of 8 wave sections'. However, you actually need 9 samples to be
     // able to loop 8 wave sections. So, to sort this, we fudge it by duplicating the last sample. You can check
     // milkytracker on this, it does the same. If you don't do this, very short looping samples will sound noticably
     // higher pitched.

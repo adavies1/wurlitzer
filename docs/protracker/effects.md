@@ -2,6 +2,14 @@
 
 ## Table of Contents
 
+  * [Effect parameters](#effect-parameters)
+  * [Effect scope](#effect-scope)
+    + [Effect memory](#effect-memory)
+  * [Available effects](#available-effects)
+  * [How and when to process each effect](#how-and-when-to-process-each-effect)
+  * [Extra notes](#extra-notes)
+    + [Pattern jump endless loops](#pattern-jump-endless-loops)
+
 ## Effect parameters
 
 Effects are made up of two bytes, one byte for the **effect code** and one byte for the **parameter**. Many effects also treat the parameter byte as two parameter nibbles (two 4-bit values) split as `xxxx yyyy`. For effect code 14 (E in hex), the first parameter `xxxx` is also used as part of the effect code, and the second parameter `yyyy` is used by the effect.
@@ -26,20 +34,20 @@ An instruction can have an effect code and parameter set. These are what make so
 | Arpeggio | 0 | This changes the period of the note at each tick, to create a rapidly changing pitch, a bit like a chord.
 | Portamento up | 1 | This slides the period currently being played down by the specified amount each tick, resulting in a pitch that slides up.
 | Portamento down | 2 | This slides the period currently being played up by the specified amount each tick, resulting in a pitch that slides down.
-| Tone portamento | 3 | This changes the period currently being played by the given amount each tick, to get it to (or as close to as possible) the specified period on the instruction (target period)
-| Vibrato | 4 | This oscillates the period currently being played according to a set waveform, with both the speed and amplitude of oscillation being specified as part of the effect.  
+| Tone portamento | 3 | This changes the period currently being played by the given amount each tick, to get it to (or as close to as possible) the specified period on the instruction (target period).
+| Vibrato | 4 | This oscillates the period currently being played according to a set waveform, with both the speed and amplitude of oscillation being specified as part of the effect.
 | Volume slide & tone portamento | 5 | This will continue a previously specified tone portamento, but also allow a volume slide (effect A).
 | Volume slide & vibrato | 6 | This will continue a previously specified vibrato, but also allow a volume slide (effect A).
 | Tremolo | 7 | This oscillates the volume according to a set waveform, with both the speed and amplitude of oscillation being specified as part of the effect.
 | Set panning position | 8 | Allows the panning position of the output audio to be set. This is not supported by Protracker, but is supported by most clones and playback routines.
 | Set sample offset | 9 | This will start a sample from a specified position, rather than at the beginning. The offset can only be specified in multiples of 256, so this effect does not allow for pinpoint accuracy.
-| Volume slide | A | This slides the volume on the current channel up or down by the specified amount each tick
+| Volume slide | A | This slides the volume on the current channel up or down by the specified amount each tick.
 | Position jump | B | This will jump to the specified index in the pattern table after the current row has completed. If the index is invalid, the song jumps to the start of the pattern table.
 | Set volume | C | Sets the volume of the current channel to the amount specified.
 | Pattern break | D | This will jump to the next position in the pattern table after the current row has finished processing, and start from the specified row.
 | Set filter | E0 | This is Amiga specific, and can be used to turn the hardware audio filter present on the Amiga on or off.
-| Fine portamento up | E1 | Decrement the current period playing by the specified amount at the end of the row
-| Fine portamento down | E2 | Increment the current period playing by the specified amount at the end of the row
+| Fine portamento up | E1 | Decrement the current period playing by the specified amount at the end of the row.
+| Fine portamento down | E2 | Increment the current period playing by the specified amount at the end of the row.
 | Set glissando | E3 | This effects the way the 'tone portamento' effect works. If set to on, then the 'tone portamento' will slide in half-notes each tick, otherwise if set to off, 'tone portamento' acts in the usual way.
 | Set vibrato waveform | E4 | Sets the waveform used for vibrato and if the position in the waveform should be reset at the start of each row (known as retriggering). Possible  waveforms are sine, ramp-down (sawtooth), square and random (from the previous 3).
 | Set finetune | E5 | Sets the fine tune value for the channel.
@@ -47,10 +55,10 @@ An instruction can have an effect code and parameter set. These are what make so
 | Set tremolo waveform | E7 | Sets the waveform used for tremolo and if the position in the waveform should be reset at the start of each row (known as retriggering). Possible  waveforms are sine, ramp-down (sawtooth), square and random (from the previous 3).
 | Unused | E8 | -
 | Retrigger note | E9 | This will retrigger (set back to the start) the sample position for this channel after the given amount of ticks. Playback continues as normal, making this sound like the same note is being played over and over very quickly (often used for hi-hats).
-| Fine volume slide up | EA | This will add the specified number to the channel volume at the end of the row
-| Fine volume slide down | EB | This will subtract the specified number from the channel volume at the end of the row
-| Note cut | EC | This will set the channel volume to 0 after the specified number of ticks
-| Note delay | ED | This will wait for the specified number of ticks before playing the sample from the beginning
+| Fine volume slide up | EA | This will add the specified number to the channel volume at the end of the row.
+| Fine volume slide down | EB | This will subtract the specified number from the channel volume at the end of the row.
+| Note cut | EC | This will set the channel volume to 0 after the specified number of ticks.
+| Note delay | ED | This will wait for the specified number of ticks before playing the sample from the beginning.
 | Invert loop / funk repeat | EE | This was first 'funkrepeat', and was then updated to be 'invert loop' The sample will be played backwards at the specified speed.
 | Set speed | F | Sets the speed / tempo of the song to the specified number (what gets updated depends on how high the value is).
 
@@ -59,7 +67,7 @@ An instruction can have an effect code and parameter set. These are what make so
 
 This section will give you pointers on how to actually implement each effect and at what point each effect will need to be (re)evaluated. This table is what has taken me the most time to figure out.
 
-Please note that in the blow table, if the parameter byte uses the whole byte, it will be described as `p`. if it is two 4-bit parameters, they will be described as `px` and `py`.
+Please note that in the below table, if the parameter byte uses the whole byte, it will be described as `p`. if it is two 4-bit parameters, they will be described as `px` and `py` (where `p` is split as `xxxx yyyy`).
 
 | Name | Code (hex) | Scope | When to process | How to process
 |--|--|--|--|--|
@@ -67,10 +75,10 @@ Please note that in the blow table, if the parameter byte uses the whole byte, i
 | Portamento up | 1 | Channel | Every tick end | Decrement the current channel period value by `py` at the end of every tick
 | Portamento down | 2 | Channel | Every tick end | Increment the current channel period value by `py` at the end of every tick
 | Tone portamento | 3 | Channel | Every tick start | Set the channel `slideRate` to `p`. Set channel `slideTarget` to the period given in the instruction. If either are not specified, use the previously stored values on the channel. On every tick start, change the channel period value by the `slideRate` to get closer to the channel `targetPeriod`. Do not go past the `targetPeriod`. If the channel has `glissando` enabled, instead of using `slideRate`, multiply or divide the period value by the twelfth root of 2, to change it by one note (known as a half-step) each tick.
-| Vibrato | 4 | Channel | Every tick start | At the start of the row, set up your oscillator. At the start of each tick, set the channel period to the starting period plus the value from your oscillator, given the current position in the row. See [oscillators](#oscillators) section.
+| Vibrato | 4 | Channel | Every tick start | At the start of the row, set up your oscillator. At the start of each tick, set the channel period to the starting period plus the value from your oscillator, given the current position in the row. See [oscillators](oscillators.md) document.
 | Volume slide & tone portamento | 5 | Channel | See effect 3 / A | Continue 'tone portamento' using variables already stored against the channel. Process 'volume slide' using given effect parameters.
 | Volume slide & vibrato | 6 | Channel | See effect 4 / A | Continue 'vibrato' using variables already stored against the channel. Process 'volume slide' using given effect parameters.
-| Tremolo | 7 | Channel | Every tick start | At the start of the row, set up your oscillator. At the start of each tick, set the channel volume to the starting volume plus the value from your oscillator, given the current position in the row. See [oscillators](#oscillators) section.
+| Tremolo | 7 | Channel | Every tick start | At the start of the row, set up your oscillator. At the start of each tick, set the channel volume to the starting volume plus the value from your oscillator, given the current position in the row. See [oscillators](oscillators.md) document.
 | Set panning position | 8 | Song | Row start | This affects how channels are mixed together. Set your panning position based upon `p`, with 0 being most left and 255 being most right. 
 | Set sample offset | 9 | Channel | Row start | Set the channel `samplePosition` to `p * 256`.
 | Volume slide | A | Channel | Every tick start except first | Add `px` to the channel volume **and** subtract `py` from the channel volume (only one of the two parameters can ever be set at a time legally). Do not exceed the allowed volume range of 0-64.
@@ -93,49 +101,6 @@ Please note that in the blow table, if the parameter byte uses the whole byte, i
 | Note delay | ED | Channel | Every tick start | Do not play the note on the channel until `py` number of ticks has passed. My code sets `sampleHasEnded` on the channel to `true` until `currentTick` is equal to `py`. I then set `sampleHasEnded` to `false` and `samplePosition` to 0, so that in the next tick, the note plays.
 | Invert loop / funk repeat | EE | Channel | Every tick start | The mystery command. Not yet implemented, will update when I do. This effect has an old and new mode, where old was 'funkrepeat' and new is 'invert loop'. 
 | Set speed | F | Song | Row start | if `p` is greater than 31, set the song `tempo` to `p`. Else, set the song `speed` to `p`.
-
-## Oscillators
-
-An oscillator is a piece of code that can give you the value of a specified waveform at a given point. You set the following data on the oscillator:
-
- - What type of waveform (sine, ramp-down, square)
- - What the amplitude of the waveform is (the value at the highest / lowest point of the wave)
- - How many oscillations there are per time period (we use this to set how many times the wave should repeat for the duration of a row)
-
-Given this data, The oscillator will be able to tell you the value you want at a given point. I have created a `ProtrackerOscillator` class in my source code, which should hopefully help to show you how this works. It also has functions that can generate all three of the different wave patterns.
-
-### Waveform shapes
-
-These are taken from Thunder's doc:
-
-```
-    Waveform   Name               
-    ---------- -------------------
-    /\  /\     Sine (default)     
-      \/  \/
-
-    |\ |\      Ramp down          
-      \| \|
-
-    ,-, ,-,    Square               
-      '-' '-'  
-```
-
-### Waveform graph diagram
-
-To try and visualise whats going on, think of the waveform as a graph:
-
-![Sine wave graph](sine-wave.png)
-
- - We set the waveform type. Here we have a sine wave, but it could easily be one of the other two.
- - We set the amount of times the sine wave repeats in a given time period, which would affect how many times it would repeat on the graph (along the same x axis). For us, this time period is a row.
- - We set the amplitude, which sets what the scale at the left goes up to. We set this to the maximum amount we want to change the channel volume / period by, which is given to us as an effect parameter.
-
-### Offsets
-
-When you don't retrigger your oscillator (go back to point 0 at the start of every row), the waveform needs to continue smoothly when you continue into subsequent rows. So, if the waveform repeats 3.3 times per row, when you get to the end of the first row, the waveform will be 30% of the way through another cycle, or in other words, it will be offset by 30%. You need to tell your oscillator this, so that when you start the next row, your waveform now starts with an offset of 0.3. This would continue, so on the next row, you would need an offset of (0.3 + 0.3), and then (0.6 + 0.3), and then (0.9 + 0.3, which you'd understand to be 0.2, or 20% as the waveform has looped) etc.
-
-**Example** Looking at the sine wave graph above, at a time point of 0, the value of the graph is also 0. At about 30%, the value is roughly 0.9. So, this means that if your waveform has just been set to repeat 3.3 times per row, on the next row, when you ask for time point 0, your oscillator needs to give you the value of 0.9, and **not** 0. Visually, you need to shift the waveform on the graph left by 30%. 
 
 
 

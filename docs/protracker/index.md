@@ -10,3 +10,4 @@ Much of the documentation here is based upon the brilliant documentation by Thun
 * [Song structure and playback logic](song-structure.md)
 * [Sample playback](samples.md)
 * [Effects](effects.md)
+* [Oscillators](oscillators.md)
