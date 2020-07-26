@@ -43,7 +43,7 @@ export function onRowEnd(player: Protracker, state: State, channel: ProtrackerCh
             break;
 
         case EFFECT_CODES.PATTERN_BREAK:
-            player.nextPattern();
+            player.nextPattern() || player.setPatternSequenceIndex(player.getSongLoopIndex());
             player.setRowIndex((10 * effectCode.px) + effectCode.py);
             break;
 
