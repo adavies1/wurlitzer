@@ -5,6 +5,9 @@ This document will explain things like timing, note frequencies (and how to get 
 ## Table of Contents
 
   * [General overview of logic](#general-overview-of-logic)
+  * [Song length](#song-length)
+    + [The Pattern Sequence](#the-pattern-sequence)
+    + [Song end and looping](#song-end-and-looping)
   * [Timing](#timing)
     + [Calculating tick length in ms](#calculating-tick-length-in-ms)
     + [Calculating tick length in samples](#calculating-tick-length-in-samples)
@@ -23,18 +26,36 @@ This is a high level view of what happens when a song is played:
      - Each instruction of the row is processed, meaning each channel is updated with the data in the instruction (sample to play, period (note) to play the sample at, effect to apply)
      - Any effects that have been assigned to a channel that should be processed at the start of a row, are now processed
 3. Samples are generated for a set amount of time, for each channel.
-    - The time in between rows is broken down into slots known as **ticks** 
+    - The time in between rows is broken down into slots known as **ticks**
     - Some effects are processed at the start of a tick (or at the start of many / all ticks) which essentially changes the settings (variables) available on the channel. This is how effects like smooth note slides are achieved.
 4. These sample streams from each channel are mixed together to form a stereo output and played
 5. Logic from points 1-4 now loops until all rows/patterns are processed
 
 The devil-in-the-detail comes from the effects that can be applied to each channel. Some are easy to process, while some are quite tricky. Also, the point(s) at when they should be processed is very specific.
 
+## Song length
+
+The length of the song and how you handle the end of the song (looping) is affected by a few different things described below.
+
+### The pattern sequence
+
+Each song has a pattern sequence, which is essentially a list that holds the order that the patterns should be played in. This list can also hold duplicate numbers, which allows the same pattern to be played more than once.
+
+Generally, your aim is to get from the start to the finish of the pattern sequence, playing all of the notes and processing all of the effects of each row of each pattern along the way.
+
+Be aware that **the pattern sequence may need to be truncated** if it is longer than the number specified in **songLength**. For example, if **songLength** was `32`, but you had `40` indexes in your pattern sequence, you should drop the last 8 indexes!
+
+### Song end and looping
+
+The song ends when you get to the end of the pattern specified by the final index in the pattern sequence. When this happens, you can either stop the song, or you can loop.
+
+To loop the song, set your current pattern sequence index variable to the value of **songLoop**. Be aware that there seems to be a quirk with this, that **songLoop** should always be 0. If this proves incorrect, I shall update this info.
+
 ## Timing
 
 The timing for a Protracker song is broken down into a few different parts:
 
- * The smallest chunk of time is known as a **tick**. The time that passes between processing a row is broken up into multiple ticks. 
+ * The smallest chunk of time is known as a **tick**. The time that passes between processing a row is broken up into multiple ticks.
  * A song has a **speed** value, which defaults to 6. This signifies how many **ticks** there are between **rows**
  * A song has a **tempo** value, which defaults to 125. This signifies **beats-per-minute**
  * There are 4 **rows per beat**
@@ -50,7 +71,7 @@ When programming a playback routine, you'll end up needing to calculate either h
  3. Multiply your **rows-per-second** value by **speed** (ticks-per-row) to give you **ticks-per-second**: `8.33 * 6 = 50`
  4. Finally, divide 1000ms by **ticks-per-second** to give you the length of a tick in ms: `1000 / 50 = 20ms`.
 
-To put it on one line: 
+To put it on one line:
 ```javascript
 let tickLengthMs = 1000 / (((tempo * 4) / 60) * speed)
 ```
