@@ -108,6 +108,10 @@ export default class Protracker extends Player {
         return this.song;
     };
 
+    getSongLoopIndex(): number {
+        return this.song.songLoop;
+    }
+
     hasSubtracks(): boolean {
         // TODO: Add subtrack support
         return false;
