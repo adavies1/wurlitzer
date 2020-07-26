@@ -63,12 +63,12 @@ export function randomInt(max: number): number {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
-export function readBigEndian16bitInt(arrayBuffer: ArrayBuffer, offset: number) {
-    return new DataView(arrayBuffer).getUint16(offset, false);
+export function read8bitInt(arrayBuffer: ArrayBuffer, offset: number) {
+    return new DataView(arrayBuffer).getUint8(offset);
 };
 
-export function readBigEndian8bitInt(arrayBuffer: ArrayBuffer, offset: number) {
-    return new DataView(arrayBuffer).getUint8(offset);
+export function readBigEndian16bitInt(arrayBuffer: ArrayBuffer, offset: number) {
+    return new DataView(arrayBuffer).getUint16(offset, false);
 };
 
 export function readStringFromArrayBuffer(arrayBuffer: ArrayBuffer, start: number, end?: number) {

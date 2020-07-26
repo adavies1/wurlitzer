@@ -215,7 +215,7 @@ export function getPatternSequence(fileData: ArrayBuffer): number[] {
 
     // Convert pattern sequence bytes to an integer array (they are big endian in the file)
     for(i=0; i<128; i++) {
-        patternSequence[i] = utils.readBigEndian8bitInt(patternSequenceData, i);
+        patternSequence[i] = utils.read8bitInt(patternSequenceData, i);
     };
 
     // Find out where the last pattern index is (the sequence is zero-padded)
@@ -287,7 +287,7 @@ export function getSignature(fileData: ArrayBuffer): string {
 
 export function getSongLoopPatternSequenceIndex(fileData: ArrayBuffer): number | undefined {
     const start = 20 + (30*31) + 1;
-    const value = utils.readBigEndian8bitInt(fileData, start)
+    const value = utils.read8bitInt(fileData, start)
 
     // If value < 127, it signifies loop index. Otherwise, there is no loop (return undefined).
     return (value < 127) ? value : undefined;
@@ -302,7 +302,7 @@ export function getTitle(fileData: ArrayBuffer): string {
 */
 export function getUsedPatternSequenceLength(fileData: ArrayBuffer): number {
     const start = 20 + (30*31);
-    return utils.readBigEndian8bitInt(fileData, start);
+    return utils.read8bitInt(fileData, start);
 }
 
 export function isFileSupported(fileData: ArrayBuffer): boolean {
@@ -356,8 +356,8 @@ function _getSampleHeader(sampleHeaderData: ArrayBuffer): SampleHeader {
     return {
         name:         utils.readStringFromArrayBuffer(sampleHeaderData, 0, 22),
         length:       utils.readBigEndian16bitInt(sampleHeaderData, 22) * 2,
-        fineTune:     _getFineTuneValue(utils.readBigEndian8bitInt(sampleHeaderData, 24)),
-        volume:       Math.min(utils.readBigEndian8bitInt(sampleHeaderData, 25), 64),
+        fineTune:     _getFineTuneValue(utils.read8bitInt(sampleHeaderData, 24)),
+        volume:       Math.min(utils.read8bitInt(sampleHeaderData, 25), 64),
         repeatOffset: utils.readBigEndian16bitInt(sampleHeaderData, 26) * 2,
         repeatLength: utils.readBigEndian16bitInt(sampleHeaderData, 28) * 2
     }
