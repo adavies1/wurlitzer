@@ -18,31 +18,44 @@ export default class MusicPlayer {
     mixer: ChannelMergerNode;
     player: AudioWorkletNode;
     connected: boolean = false;
-    ready: boolean = false;
+    status: 'loading' | 'stopped' | 'ready' = 'loading';
 
     constructor() {
         this.audioContext = utils.createAudioContext();
     }
 
     async load(source: string | File) {
-        const fileData = await _loadMusicFile(source);
-        const player = await _loadPlayer(fileData, this.audioContext);
         this.stop();
-        this.player = player;
-        this.fileData = fileData;
-        this.mixer = _addAmigaMixer(this.audioContext, player);
-        this.ready = true;
+        this.fileData = await _loadMusicFile(source);
+        this.player = await _loadPlayer(this.fileData, this.audioContext);
+        this.player.port.onmessage = this.onMessage;
+        this.mixer = _addAmigaMixer(this.audioContext, this.player);
+        this.status = 'ready';
+    }
+
+    onMessage = (event: any) => {
+        if(event.data === 'ended') {
+            console.info('[MusicPlayer] - Song has ended');
+            this.stop();
+        }
     }
 
     pause() {
-        if(this.ready) {
+        if(this.status === 'ready') {
             this._disconnect();
             this.player.port.postMessage({cmd: 'pause'});
         }
     }
 
-    play() {
-        if(this.ready) {
+    async play() {
+        if(this.status === 'stopped') {
+            this.player = await _loadPlayer(this.fileData, this.audioContext);
+            this.player.port.onmessage = this.onMessage;
+            this.mixer = _addAmigaMixer(this.audioContext, this.player);
+            this.status = 'ready';
+        }
+
+        if(this.status === 'ready') {
             this._connect();
             this.player.port.postMessage({cmd: 'play'});
         }
@@ -69,9 +82,10 @@ export default class MusicPlayer {
     }
 
     stop() {
-        if(this.ready) {
+        if(this.status === 'ready') {
             this._disconnect();
             this.player.port.postMessage({cmd: 'stop'});
+            this.status = 'stopped';
         }
     }
 

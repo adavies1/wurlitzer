@@ -293,12 +293,15 @@ export default class Protracker extends Player {
             stillMoreToPlay = this._goToNextPosition();
         }
 
-        if(!this._isBufferFull(channelBuffers[0].length)) {
-            stillMoreToPlay = this.onAudioProcess(channelBuffers);
-        }
-        else {
-            // mergeChannelsToOutput(event.outputBuffer, this.channels);
-            this.state.currentBufferSamplePosition = 0;
+        if(stillMoreToPlay) {
+            if(!this._isBufferFull(channelBuffers[0].length)) {
+                stillMoreToPlay = this.onAudioProcess(channelBuffers);
+            }
+            else {
+                this.state.currentBufferSamplePosition = 0;
+            }
+        } else {
+            this.reset();
         }
 
         return stillMoreToPlay;
