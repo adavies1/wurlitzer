@@ -213,7 +213,7 @@ export default class Protracker extends Player {
     }
 
     setPatternSequenceIndex(index: number, zeroOnFail: boolean = false): boolean {
-        if(typeof this.song.patternSequence[index] !== 'undefined') {
+        if(typeof this.song.patternSequence[index] !== 'undefined' && index <= this.song.songLength - 1) {
             this.state.currentPatternSequenceIndex = index;
             this.setRowIndex(0);
             return true;
