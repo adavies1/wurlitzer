@@ -290,7 +290,10 @@ export function getSongLoopPatternSequenceIndex(fileData: ArrayBuffer): number |
     const value = utils.read8bitInt(fileData, start)
 
     // If value < 127, it signifies loop index. Otherwise, there is no loop (return undefined).
-    return (value < 127) ? value : undefined;
+    // return (value < 127) ? value : undefined;
+
+    // Oddly, it seems you should always return 0 for this...?
+    return 0;
 };
 
 export function getTitle(fileData: ArrayBuffer): string {
