@@ -38,6 +38,16 @@ describe('Utils tests', () => {
         });
     });
 
+    // read8bitInt
+    describe('read8bitInt tests', () => {
+        it('Should return the integer 104', () => {
+            expect(utils.read8bitInt(buffer, 0)).to.equal(104);
+        });
+        it('Should return the integer 111', () => {
+            expect(utils.read8bitInt(buffer, 4)).to.equal(111);
+        });
+    });
+
     // readBigEndian16bitInt
     describe('readBigEndian16bitInt tests', () => {
         it('Should return the integer 26725', () => {
@@ -45,16 +55,6 @@ describe('Utils tests', () => {
         });
         it('Should return the integer 28448', () => {
             expect(utils.readBigEndian16bitInt(buffer, 4)).to.equal(28448);
-        });
-    });
-
-    // readBigEndian8bitInt
-    describe('readBigEndian8bitInt tests', () => {
-        it('Should return the integer 104', () => {
-            expect(utils.readBigEndian8bitInt(buffer, 0)).to.equal(104);
-        });
-        it('Should return the integer 111', () => {
-            expect(utils.readBigEndian8bitInt(buffer, 4)).to.equal(111);
         });
     });
 
