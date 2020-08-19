@@ -1,8 +1,8 @@
 {
-    "name": "chipshop",
+    "name": "wurlitzer",
     "version": "1.0.0",
     "description": "Web based chiptune player",
-    "main": "index.js",
+    "main": "dist/index.js",
     "scripts": {
         "build": "tsc",
         "dev": "webpack-dev-server --config webpack-dev.config.js",
@@ -15,8 +15,7 @@
         "@babel/preset-env": "^7.0.0-rc.2",
         "@types/chai": "^4.1.4",
         "@types/mocha": "^5.2.5",
-        "@types/node": "^10.9.4",
-        "@types/webaudioapi": "0.0.27",
+        "@types/node": "^14.6.0",
         "@types/webpack": "^4.4.11",
         "babel-core": "^6.26.3",
         "chai": "4.1.2",

@@ -8,7 +8,7 @@ import { WAVE_TYPES } from './constants';
 import ProtrackerOscillator from './ProtrackerOscillator';
 
 
-export function isTonePortamento(effect: EffectCode) {
+export function isTonePortamento(effect: EffectCode | undefined) {
     if (!effect) return false;
     const code = effect.code === 14 ? `${effect.code}-${effect.px}` : `${effect.code}`;
     return code === EFFECT_CODES.TONE_PORTAMENTO || code === EFFECT_CODES.VOLUME_SLIDE_TONE_PORTAMENTO;
@@ -122,7 +122,8 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
             break;
 
         case EFFECT_CODES.SET_FINE_TUNE:
-            if (channel.getInstruction().period !== 0) {
+            const instruction = channel.getInstruction();
+            if (instruction && instruction.period !== 0) {
                 const newFineTune = effectCode.py < 8 ? effectCode.py : -16 + effectCode.py;
                 channel.setFineTune(newFineTune);
             }
@@ -191,7 +192,7 @@ export function onTickStart(player: Protracker, state: State, channel: Protracke
         case EFFECT_CODES.VOLUME_SLIDE_TONE_PORTAMENTO:
             if (code === EFFECT_CODES.TONE_PORTAMENTO && state.currentTick === 0) {
                 if(effectCode.p > 0) channel.setSlideRate(effectCode.p);
-                if(instruction.period) channel.setSlideTarget(instruction.period);
+                if(instruction && instruction.period) channel.setSlideTarget(instruction.period);
             }
             if (channel.getPeriod() > channel.getSlideTarget()) {
                 channel.setPeriod(Math.max(channel.getPeriod() - channel.getSlideRate(), channel.getSlideTarget()));

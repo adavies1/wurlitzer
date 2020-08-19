@@ -3,16 +3,15 @@ import { Instruction } from './models/Instruction.interface';
 import { Sample } from './models/Sample.interface';
 import ProtrackerOscillator from './ProtrackerOscillator';
 
-
-export interface state {
-    effect: EffectCode,
+export type state = {
+    effect: EffectCode | undefined,
     fineTune: number,
     frequency: number,
-    instruction: Instruction,
+    instruction: Instruction | undefined,
     originalPeriod: number,
     fineTunedPeriod: number,
     period: number,
-    sample: Sample,
+    sample: Sample | undefined,
     sampleHasEnded: boolean,
     sampleIncrement: number,
     samplePosition: number,
@@ -23,10 +22,32 @@ export interface state {
     volume: number
 }
 
+const getDefaultState = ():state => {
+    return {
+        effect: undefined,
+        fineTune: 0,
+        frequency: 0,
+        instruction: undefined,
+        originalPeriod: 0,
+        fineTunedPeriod: 0,
+        period: 0,
+        sample: undefined,
+        sampleHasEnded: false,
+        sampleIncrement: 0,
+        samplePosition: 0,
+        slideRate: 0,
+        slideTarget: 0,
+        tremolo: new ProtrackerOscillator,
+        vibrato: new ProtrackerOscillator,
+        volume: 64
+    };
+};
+
+
 export default class ProtrackerChannel {
     amigaClockSpeed: number;
     bufferFrequency: number;
-    state: state;
+    state: state = getDefaultState();
 
     constructor(bufferFrequency: number, amigaClockSpeed: number) {
         this.amigaClockSpeed = amigaClockSpeed;
@@ -56,7 +77,7 @@ export default class ProtrackerChannel {
         }
     };
 
-    getEffect(): EffectCode {
+    getEffect(): EffectCode | undefined {
         return this.state.instruction ? this.state.instruction.effect : undefined;
     };
 
@@ -80,7 +101,7 @@ export default class ProtrackerChannel {
         return this.state.period;
     };
 
-    getSample(): Sample {
+    getSample(): Sample | undefined {
         return this.state.sample;
     };
 
@@ -109,24 +130,7 @@ export default class ProtrackerChannel {
     }
 
     reset(): void {
-        this.state = {
-            effect: null,
-            fineTune: 0,
-            frequency: 0,
-            instruction: undefined,
-            originalPeriod: 0,
-            fineTunedPeriod: 0,
-            period: 0,
-            sample: null,
-            sampleHasEnded: false,
-            sampleIncrement: 0,
-            samplePosition: 0,
-            slideRate: 0,
-            slideTarget: 0,
-            tremolo: new ProtrackerOscillator,
-            vibrato: new ProtrackerOscillator,
-            volume: 64
-        }
+        this.state = getDefaultState();
     };
 
     resetFineTune() {
@@ -225,7 +229,7 @@ export default class ProtrackerChannel {
     };
 
     _getSampleValue(): number {
-        if(!this.state.sampleHasEnded) {
+        if(this.state.sample && !this.state.sampleHasEnded) {
             const fractionOfNextSample = this.state.samplePosition % 1;
             const lowerSample = this.state.sample.audio[Math.floor(this.state.samplePosition)];
             const upperSample = this.state.sample.audio[Math.ceil(this.state.samplePosition)];
@@ -239,7 +243,7 @@ export default class ProtrackerChannel {
     };
 
     _incrementSamplePosition(): void {
-        if(!this.state.sampleHasEnded) {
+        if(this.state.sample && !this.state.sampleHasEnded) {
             let nextPosition = this.state.samplePosition + this.state.sampleIncrement;
             let sampleEnd: number;
 

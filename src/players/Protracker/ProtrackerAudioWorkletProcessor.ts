@@ -1,25 +1,25 @@
-/**
- * Please note
- *
- * There are some typescript scope issues with this file.
- * Support for the special AudioWorkletProcessor and its Worklet scope is not yet implemented.
- *
- * This means that certain hacks have been put in place to fudge it for now.
- */
-
-
-
-
 interface AudioWorkletProcessor {
     readonly port: MessagePort;
-    process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>): void;
+    process(
+      inputs: Float32Array[][],
+      outputs: Float32Array[][],
+      parameters: Record<string, Float32Array>
+    ): boolean;
 }
 
 declare var AudioWorkletProcessor: {
     prototype: AudioWorkletProcessor;
-    new(options?: AudioWorkletNodeOptions): AudioWorkletProcessor;
-}
+    new (options?: AudioWorkletNodeOptions): AudioWorkletProcessor;
+};
 
+declare function registerProcessor(
+    name: string,
+    processorCtor: (new (
+      options?: AudioWorkletNodeOptions
+    ) => AudioWorkletProcessor) & {
+      parameterDescriptors?: AudioParamDescriptor[];
+    }
+): void;
 
 
 
@@ -30,7 +30,7 @@ class ProtrackerAudioWorkletProcessor extends AudioWorkletProcessor {
     fileData: ArrayBuffer;
     player: Protracker;
 
-    constructor(config: AudioWorkletNodeOptions) {
+    constructor(config: AudioWorkletNodeOptions = {}) {
         super(config);
         this.fileData = config.processorOptions.fileData;
         this.player = new Protracker(((globalThis as unknown) as AudioContext) /* hack */, this.fileData);
@@ -62,5 +62,4 @@ class ProtrackerAudioWorkletProcessor extends AudioWorkletProcessor {
     }
 }
 
-// @ts-ignore
 registerProcessor('protracker', ProtrackerAudioWorkletProcessor) /* hack - registerProcessor is global to AudioWorkletProcessor scope */

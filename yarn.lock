@@ -505,9 +505,14 @@
   version "5.2.5"
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-5.2.5.tgz#8a4accfc403c124a0bafe8a9fc61a05ec1032073"
 
-"@types/node@*", "@types/node@^10.9.4":
+"@types/node@*":
   version "10.9.4"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.9.4.tgz#0f4cb2dc7c1de6096055357f70179043c33e9897"
+
+"@types/node@^14.6.0":
+  version "14.6.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.6.0.tgz#7d4411bf5157339337d7cff864d9ff45f177b499"
+  integrity sha512-mikldZQitV94akrc4sCcSjtJfsTKt4p+e/s0AGscVA6XArQ9kFclP+ZiYUMnq987rc6QlYxXv/EivqlfSLxpKA==
 
 "@types/tapable@*":
   version "1.0.4"
@@ -518,10 +523,6 @@
   resolved "https://registry.yarnpkg.com/@types/uglify-js/-/uglify-js-3.0.3.tgz#801a5ca1dc642861f47c46d14b700ed2d610840b"
   dependencies:
     source-map "^0.6.1"
-
-"@types/webaudioapi@0.0.27":
-  version "0.0.27"
-  resolved "https://registry.yarnpkg.com/@types/webaudioapi/-/webaudioapi-0.0.27.tgz#8a3f98eaa07cb577be2dae22311d37c3b545f74f"
 
 "@types/webpack@^4.4.11":
   version "4.4.11"

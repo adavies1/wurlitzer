@@ -1,7 +1,11 @@
 export function createAudioContext(): AudioContext {
     return typeof window  !== 'undefined'
         ? new (window.AudioContext || (window as any).webkitAudioContext)()
-        : globalThis;
+        : globalThis as unknown as AudioContext;
+}
+
+export async function loadFile(source: string | File): Promise<ArrayBuffer> {
+    return (typeof source === 'string' ? loadFileFromUrl(source) : loadFileFromDisk(source))
 }
 
 export function loadFileFromDisk(source: File): Promise<ArrayBuffer> {
@@ -74,6 +78,6 @@ export function readBigEndian16bitInt(arrayBuffer: ArrayBuffer, offset: number) 
 export function readStringFromArrayBuffer(arrayBuffer: ArrayBuffer, start: number, end?: number) {
     return String.fromCharCode.apply(
         null,
-        new Uint8Array(arrayBuffer.slice(start, end))
+        Array.from(new Uint8Array(arrayBuffer.slice(start, end)))
     );
 };

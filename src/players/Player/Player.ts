@@ -1,8 +1,12 @@
-import * as constants from '../constants';
+import * as constants from '../../constants';
 
 export default abstract class Player {
     audioContext: AudioContext;
     status: constants.PlayerStatus = constants.PlayerStatus.STOPPED;
+
+    constructor(audioContext: AudioContext) {
+        this.audioContext = audioContext;
+    }
 
     abstract getPlaybackStatus(): constants.PlayerStatus;
     abstract hasSubtracks(): boolean;

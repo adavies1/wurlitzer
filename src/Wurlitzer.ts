@@ -1,88 +1,81 @@
+import players, { PlayerInitInfo } from './players/players';
 import * as utils from './utils';
-import { PlayerInitInfo } from './models';
+import { loadFile } from './utils';
 
-import { getInitOptions as getProtrackerInitOptions } from './players/Protracker/ProtrackerReader';
-
-export const players:PlayerInitInfo[] = [
-    {
-        name: 'protracker',
-        getInitOptions: getProtrackerInitOptions,
-        options: undefined,
-        path: '/dist/players/protracker.bundle.js'
-    }
-]
-
-export default class MusicPlayer {
+export class Wurlitzer {
     audioContext: AudioContext;
-    fileData: ArrayBuffer;
-    mixer: ChannelMergerNode;
-    player: AudioWorkletNode;
+    fileData: ArrayBuffer | undefined;
+    mixer: ChannelMergerNode | undefined;
+    player: AudioWorkletNode | undefined;
     connected: boolean = false;
-    status: 'loading' | 'stopped' | 'ready' = 'loading';
+    status: 'not-ready' | 'loading' | 'stopped' | 'ready' | 'loading' = 'not-ready';
 
-    constructor() {
-        this.audioContext = utils.createAudioContext();
+    constructor(audioContext?: AudioContext) {
+        this.audioContext = audioContext || utils.createAudioContext();
     }
 
     async load(source: string | File) {
+        const fileData = await loadFile(source);
+        const player = await loadPlayer(fileData, this.audioContext);
+
         this.stop();
-        this.fileData = await _loadMusicFile(source);
-        this.player = await _loadPlayer(this.fileData, this.audioContext);
+        this.fileData = fileData;
+        this.player = player;
         this.player.port.onmessage = this.onMessage;
-        this.mixer = _addAmigaMixer(this.audioContext, this.player);
+        this.mixer = addAmigaMixer(this.audioContext, this.player);
         this.status = 'ready';
     }
 
     onMessage = (event: any) => {
         if(event.data === 'ended') {
-            console.info('[MusicPlayer] - Song has ended');
+            console.info('[Wurlitzer] - Song has ended');
             this.stop();
         }
     }
 
     pause() {
-        if(this.status === 'ready') {
+        if(this.player && this.status === 'ready') {
             this._disconnect();
             this.player.port.postMessage({cmd: 'pause'});
         }
     }
 
     async play() {
-        if(this.status === 'stopped') {
-            this.player = await _loadPlayer(this.fileData, this.audioContext);
+        if(this.fileData && this.status === 'stopped') {
+            this.player = await loadPlayer(this.fileData, this.audioContext);
             this.player.port.onmessage = this.onMessage;
-            this.mixer = _addAmigaMixer(this.audioContext, this.player);
+            this.mixer = addAmigaMixer(this.audioContext, this.player);
             this.status = 'ready';
         }
 
-        if(this.status === 'ready') {
+        if(this.player && this.status === 'ready') {
             this._connect();
             this.player.port.postMessage({cmd: 'play'});
         }
     }
 
     previousSubtrack() {
-        this.player.port.postMessage({cmd: 'previousSubtrack'});
+        this.player && this.player.port.postMessage({cmd: 'previousSubtrack'});
     }
 
     nextSubtrack() {
-        this.player.port.postMessage({cmd: 'nextSubtrack'});
+        this.player && this.player.port.postMessage({cmd: 'nextSubtrack'});
     }
 
     reset() {
-        this.player.port.postMessage({cmd: 'reset'});
+        this.player && this.player.port.postMessage({cmd: 'reset'});
     }
 
     setSubtrack(index: number) {
-        this.player.port.postMessage({cmd: 'setSubtrack', data: index});
+        this.player && this.player.port.postMessage({cmd: 'setSubtrack', data: index});
     }
 
     skipToPosition(newPosition: number) {
-        this.player.port.postMessage({cmd: 'skipToPosition', data: newPosition});
+        this.player && this.player.port.postMessage({cmd: 'skipToPosition', data: newPosition});
     }
 
     stop() {
-        if(this.status === 'ready') {
+        if(this.player && this.status === 'ready') {
             this._disconnect();
             this.player.port.postMessage({cmd: 'stop'});
             this.status = 'stopped';
@@ -90,14 +83,14 @@ export default class MusicPlayer {
     }
 
     private _connect() {
-        if(!this.connected) {
+        if(this.mixer && !this.connected) {
             this.mixer.connect(this.audioContext.destination);
             this.connected = true;
         }
     }
 
     private _disconnect() {
-        if(this.connected) {
+        if(this.mixer && this.connected) {
             this.mixer.disconnect();
             this.connected = false;
         }
@@ -106,7 +99,7 @@ export default class MusicPlayer {
 
 
 // Utility functions
-export function _addAmigaMixer(audioContext: AudioContext, player: AudioWorkletNode): ChannelMergerNode {
+export function addAmigaMixer(audioContext: AudioContext, player: AudioWorkletNode): ChannelMergerNode {
     const mixer = new ChannelMergerNode(audioContext, { numberOfInputs: 2 });
 
     // If song has 4 channels, mimick amiga left/right split (LRRL)
@@ -130,12 +123,8 @@ export function _addAmigaMixer(audioContext: AudioContext, player: AudioWorkletN
     return mixer;
 }
 
-export async function _loadMusicFile(source: string | File): Promise<ArrayBuffer> {
-    return (typeof source === 'string' ? utils.loadFileFromUrl(source) : utils.loadFileFromDisk(source))
-}
-
-export async function _loadPlayer(fileData: ArrayBuffer, audioContext: AudioContext): Promise<AudioWorkletNode> {
-    let requiredPlayer:PlayerInitInfo = undefined;
+export async function loadPlayer(fileData: ArrayBuffer, audioContext: AudioContext): Promise<AudioWorkletNode> {
+    let requiredPlayer:PlayerInitInfo | undefined;
 
     players.forEach(player => {
         try {
@@ -158,3 +147,5 @@ export async function _loadPlayer(fileData: ArrayBuffer, audioContext: AudioCont
         return new AudioWorkletNode(audioContext, requiredPlayer.name, requiredPlayer.options);
     }
 }
+
+export default Wurlitzer;

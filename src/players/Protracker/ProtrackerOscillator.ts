@@ -6,7 +6,7 @@ import { pickRandom } from '../../utils';
 export default class ProtrackerOscillator implements Oscillator {
     amplitude: number = 1;
     offset: number = 0;
-    originalValue: number;
+    originalValue: number = 0;
     oscillationsPerRow: number = 1;
     retrigger: boolean = false;
     waveGenerator: WaveGenerator = generateSineWave;

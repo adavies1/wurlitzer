@@ -24,6 +24,7 @@ const config = {
         extensions: ['.tsx', '.ts', '.js', '.jsx']
     },
     devServer: {
+        contentBase: [path.join(__dirname, 'frontend'), path.join(__dirname)],
         publicPath: '/dist/',
         hot: false,
         inline: false,
@@ -38,7 +39,7 @@ module.exports = [
     {
         ...config,
         entry: {
-            dev: './src/index.ts',
+            frontend: './frontend/index.ts',
             //player: './src/MusicPlayer.ts'
         },
         output: {
