@@ -11,6 +11,9 @@ const config = {
                 test: /\.tsx?$/,
                 use: {
                     loader: 'ts-loader',
+                    options: {
+                        configFile: 'tsconfig.dev.json'
+                    }
                 },
                 exclude: /node_modules/,
             }
