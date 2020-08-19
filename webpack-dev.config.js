@@ -1,73 +1,57 @@
 const path = require('path');
 const webpack = require('webpack');
 
+const config = {
+    entry: {},
+    mode: 'development',
+    target: 'web',
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                use: {
+                    loader: 'ts-loader',
+                },
+                exclude: /node_modules/,
+            }
+        ]
+    },
+    output: {},
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js', '.jsx']
+    },
+    devServer: {
+        publicPath: '/dist/',
+        hot: false,
+        inline: false,
+        injectClient: false,
+        injectHot: false,
+        liveReload: false
+    },
+    devtool: 'inline-source-map'
+};
+
 module.exports = [
     {
+        ...config,
         entry: {
-            main: './src/index.ts'
-        },
-        mode: 'development',
-        target: 'web',
-        module: {
-            rules: [
-                {
-                    test: /\.tsx?$/,
-                    use: {
-                        loader: 'ts-loader',
-                    },
-                    exclude: /node_modules/,
-                }
-            ]
+            dev: './src/index.ts',
+            //player: './src/MusicPlayer.ts'
         },
         output: {
             filename: '[name].bundle.js',
             path: path.resolve(__dirname, 'dist')
-        },
-        resolve: {
-            extensions: ['.tsx', '.ts', '.js', '.jsx']
-        },
-        devServer: {
-            publicPath: '/dist/',
-            hot: false,
-            inline: false,
-            injectClient: false,
-            injectHot: false,
-            liveReload: false
-        },
-        devtool: 'inline-source-map'
+        }
     },
     {
+        ...config,
         entry: {
             protracker: './src/players/Protracker/ProtrackerAudioWorkletProcessor.ts'
         },
-        mode: 'development',
         target: 'webworker',
-        module: {
-            rules: [
-                {
-                    test: /\.tsx?$/,
-                    use: {
-                        loader: 'ts-loader',
-                    },
-                    exclude: /node_modules/,
-                }
-            ]
-        },
         output: {
             filename: '[name].bundle.js',
-            path: path.resolve(__dirname, 'dist')
-        },
-        resolve: {
-            extensions: ['.tsx', '.ts', '.js', '.jsx']
-        },
-        devServer: {
-            publicPath: '/dist/',
-            hot: false,
-            inline: false,
-            injectClient: false,
-            injectHot: false,
-            liveReload: false
-        },
-        devtool: 'inline-source-map'
+            path: path.resolve(__dirname, 'dist', 'players')
+        }
     }
 ];

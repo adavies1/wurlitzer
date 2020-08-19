@@ -1,11 +1,8 @@
 const path = require('path');
 const webpack = require('webpack');
 
-module.exports = {
-    entry: {
-        main: './src/index.ts',
-        protracker: './src/players/Protracker/Protracker.ts'
-    },
+const config = {
+    entry: {},
     mode: 'production',
     module: {
         rules: [
@@ -18,11 +15,31 @@ module.exports = {
             }
         ]
     },
-    output: {
-        filename: '[name].bundle.js',
-        path: path.resolve(__dirname, 'dist'),
-    },
+    output: {},
     resolve: {
         extensions: ['.tsx', '.ts', '.js', '.jsx']
-    },
+    }
 };
+
+module.exports = [
+    {
+        ...config,
+        entry: {
+            player: './src/MusicPlayer.ts',
+        },
+        output: {
+            filename: '[name].bundle.js',
+            path: path.resolve(__dirname, 'dist'),
+        }
+    },
+    {
+        ...config,
+        entry: {
+            protracker: './src/players/Protracker/Protracker.ts'
+        },
+        output: {
+            filename: '[name].bundle.js',
+            path: path.resolve(__dirname, 'dist', 'players'),
+        }
+    }
+];

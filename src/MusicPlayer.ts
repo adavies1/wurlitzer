@@ -8,7 +8,7 @@ export const players:PlayerInitInfo[] = [
         name: 'protracker',
         getInitOptions: getProtrackerInitOptions,
         options: undefined,
-        path: '/dist/protracker.bundle.js'
+        path: '/dist/players/protracker.bundle.js'
     }
 ]
 
