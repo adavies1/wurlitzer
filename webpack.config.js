@@ -4,12 +4,16 @@ const webpack = require('webpack');
 const config = {
     entry: {},
     mode: 'production',
+    target: 'web',
     module: {
         rules: [
             {
                 test: /\.tsx?$/,
                 use: {
                     loader: 'ts-loader',
+                    options: {
+                        configFile: 'tsconfig.players.build.json'
+                    }
                 },
                 exclude: /node_modules/,
             }
@@ -25,21 +29,12 @@ module.exports = [
     {
         ...config,
         entry: {
-            player: './src/MusicPlayer.ts',
+            protracker: './src/players/Protracker/ProtrackerAudioWorkletProcessor.ts'
         },
+        target: 'webworker',
         output: {
             filename: '[name].bundle.js',
-            path: path.resolve(__dirname, 'dist'),
-        }
-    },
-    {
-        ...config,
-        entry: {
-            protracker: './src/players/Protracker/Protracker.ts'
-        },
-        output: {
-            filename: '[name].bundle.js',
-            path: path.resolve(__dirname, 'dist', 'players'),
+            path: path.resolve(__dirname, 'dist', 'players')
         }
     }
 ];

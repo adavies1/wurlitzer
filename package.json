@@ -3,9 +3,11 @@
     "version": "1.0.0",
     "description": "Web based chiptune player",
     "main": "dist/index.js",
+    "types": "dist/@types/index.d.ts",
     "scripts": {
-        "build": "tsc",
-        "dev": "webpack-dev-server --config webpack-dev.config.js",
+        "build": "webpack && tsc -p tsconfig.wurlitzer.build.json",
+        "dev-players": "webpack --watch --config webpack-dev.config.js ",
+        "dev-wurlitzer": "tsc -p tsconfig.wurlitzer.dev.json --watch",
         "test": "karma start --single-run",
         "test:watch": "karma start"
     },

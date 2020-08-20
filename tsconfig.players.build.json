@@ -1,0 +1,6 @@
+{
+    "extends": "tsconfig.players.dev.json",
+    "compilerOptions": {
+        "sourceMap": false,
+    }
+}

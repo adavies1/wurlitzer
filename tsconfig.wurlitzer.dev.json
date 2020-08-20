@@ -13,11 +13,12 @@
         "module": "esnext",
         "moduleResolution": "node",
         "resolveJsonModule": true,
-        "outDir": "./dist/",
-        "declarationDir": "./",
         "noImplicitAny": true,
         "declaration": true,
-        "sourceMap": false,
+        "inlineSourceMap": true,
+        "inlineSources": true,
+        "outDir": "./dist",
+        "declarationDir": "./dist/@types"
     },
     "include": ["src/index.ts"],
     "exclude": ["node_modules", "**/__tests__/*"]

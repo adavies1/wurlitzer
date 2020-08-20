@@ -12,7 +12,7 @@ const config = {
                 use: {
                     loader: 'ts-loader',
                     options: {
-                        configFile: 'tsconfig.dev.json'
+                        configFile: 'tsconfig.players.dev.json'
                     }
                 },
                 exclude: /node_modules/,
@@ -23,15 +23,6 @@ const config = {
     resolve: {
         extensions: ['.tsx', '.ts', '.js', '.jsx']
     },
-    devServer: {
-        contentBase: [path.join(__dirname, 'frontend'), path.join(__dirname)],
-        publicPath: '/dist/',
-        hot: false,
-        inline: false,
-        injectClient: false,
-        injectHot: false,
-        liveReload: false
-    },
     devtool: 'inline-source-map'
 };
 
@@ -39,22 +30,11 @@ module.exports = [
     {
         ...config,
         entry: {
-            frontend: './frontend/index.ts',
-            //player: './src/MusicPlayer.ts'
-        },
-        output: {
-            filename: '[name].bundle.js',
-            path: path.resolve(__dirname, 'dist')
-        }
-    },
-    {
-        ...config,
-        entry: {
             protracker: './src/players/Protracker/ProtrackerAudioWorkletProcessor.ts'
         },
         target: 'webworker',
         output: {
-            filename: '[name].bundle.js',
+            filename: '[name].js',
             path: path.resolve(__dirname, 'dist', 'players')
         }
     }

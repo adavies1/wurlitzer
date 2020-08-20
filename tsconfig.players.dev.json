@@ -10,15 +10,14 @@
         "skipLibCheck": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
-        "module": "esnext",
+        "module": "ESNext",
         "moduleResolution": "node",
         "resolveJsonModule": true,
-        "outDir": "./dist/",
-        "declarationDir": "./",
         "noImplicitAny": true,
         "declaration": true,
-        "sourceMap": false,
+        "sourceMap": true,
+        "declarationDir": "./@types"
     },
-    "include": ["src/index.ts"],
+    "include": ["src"],
     "exclude": ["node_modules", "**/__tests__/*"]
 }
