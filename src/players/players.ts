@@ -12,7 +12,7 @@ const players:PlayerInitInfo[] = [
         name: 'protracker',
         getInitOptions: getProtrackerInitOptions,
         options: {},
-        path: '/dist/players/protracker.bundle.js'
+        path: process.env.PUBLIC_URL + '/players/protracker.js'
     }
 ];
 

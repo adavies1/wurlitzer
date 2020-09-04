@@ -41,7 +41,7 @@ class ProtrackerAudioWorkletProcessor extends AudioWorkletProcessor {
         const notFinished = this.player.onAudioProcess(outputs.map(output => output[0]));
 
         if(!notFinished) {
-            this.port.postMessage('ended');
+            this.port.postMessage({ message: 'ended' });
         }
 
         return notFinished;
@@ -58,6 +58,11 @@ class ProtrackerAudioWorkletProcessor extends AudioWorkletProcessor {
             case 'stop':
                 this.player.stop();
                 break;
+            case 'getInfo':
+                this.port.postMessage({
+                    message: 'songInfo',
+                    value: this.player.getSong()
+                });
         };
     }
 }

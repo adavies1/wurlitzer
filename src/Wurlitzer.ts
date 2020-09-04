@@ -4,14 +4,20 @@ import { loadFile } from './utils';
 
 export class Wurlitzer {
     audioContext: AudioContext;
+    extraMessageHandler: (event: any) => void;
     fileData: ArrayBuffer | undefined;
     mixer: ChannelMergerNode | undefined;
     player: AudioWorkletNode | undefined;
     connected: boolean = false;
     status: 'not-ready' | 'loading' | 'stopped' | 'ready' | 'loading' = 'not-ready';
 
-    constructor(audioContext?: AudioContext) {
+    constructor(audioContext?: AudioContext, messageHandler?: (event: any) => void) {
         this.audioContext = audioContext || utils.createAudioContext();
+        this.extraMessageHandler = messageHandler || function(event) {};
+    }
+
+    getInfo = () => {
+        this.player && this.player.port.postMessage({cmd: 'getInfo'});
     }
 
     async load(source: string | File) {
@@ -27,10 +33,11 @@ export class Wurlitzer {
     }
 
     onMessage = (event: any) => {
-        if(event.data === 'ended') {
+        if(event.data.message === 'ended') {
             console.info('[Wurlitzer] - Song has ended');
             this.stop();
         }
+        this.extraMessageHandler(event);
     }
 
     pause() {
