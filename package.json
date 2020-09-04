@@ -4,6 +4,7 @@
     "description": "Web based chiptune player",
     "main": "dist/index.js",
     "types": "dist/@types/index.d.ts",
+    "private": true,
     "scripts": {
         "build": "webpack && tsc -p tsconfig.wurlitzer.build.json",
         "dev-players": "webpack --watch --config webpack-dev.config.js ",
@@ -11,7 +12,7 @@
         "test": "karma start --single-run",
         "test:watch": "karma start"
     },
-    "author": "",
+    "author": "Alex Davies",
     "license": "ISC",
     "devDependencies": {
         "@babel/preset-env": "^7.0.0-rc.2",
