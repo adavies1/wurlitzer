@@ -7,7 +7,7 @@ Much of the documentation here is based upon the brilliant documentation by Thun
 ## Articles
 
 * [File structure](file-structure.md)
-* [Song structure and playback logic](song-structure.md)
+* [Playback logic](playback-logic.md)
 * [Sample playback](samples.md)
 * [Effects](effects.md)
 * [Oscillators](oscillators.md)
