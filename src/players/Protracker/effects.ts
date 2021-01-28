@@ -102,6 +102,10 @@ export function onRowStart(player: Protracker, state: State, channel: Protracker
             vibrato.setOscillationsPerRow((effectCode.px * (state.speed - 1)) / 64);
             break;
 
+        case EFFECT_CODES.VOLUME_SLIDE_VIBRATO:
+            vibrato.setOriginalValue(channel.getPeriod());
+            break;
+
         case EFFECT_CODES.TREMOLO:
             tremolo.setOriginalValue(channel.getVolume());
             tremolo.setAmplitude(effectCode.py * 2);
