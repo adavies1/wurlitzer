@@ -5,9 +5,9 @@ import { Instruction } from './models/Instruction.interface';
 import { Sample } from './models/Sample.interface';
 
 import Player from "../Player/Player";
-import ProtrackerChannel from "./ProtrackerChannel";
+import ProtrackerChannel from "./ProtrackerChannel/ProtrackerChannel";
 import * as reader from "./ProtrackerReader";
-import * as effects from './effects';
+import { isTonePortamento } from './effects/utils';
 
 // import { mergeChannelsToOutput } from '../../utils';
 
@@ -84,9 +84,9 @@ export default class Protracker extends Player {
     };
 
 
-    /****************************
-     *     Public functions     *
-     ****************************/
+    // ****************************
+    // *     Public functions     *
+    // ****************************
 
     getChannels(): ProtrackerChannel[] {
         return this.channels;
@@ -263,9 +263,9 @@ export default class Protracker extends Player {
     };
 
 
-    /***************************
-     *     Event functions     *
-     ***************************/
+    // ***************************
+    // *     Event functions     *
+    // ***************************
 
     onAudioProcess(channelBuffers: Float32Array[]): boolean {
         let stillMoreToPlay = true;
@@ -273,18 +273,18 @@ export default class Protracker extends Player {
         if (!this._isDelayed()) {
             if(this._isStartofRow()) {
                 this._assignInstructionsToChannels(this._getCurrentRow());
-                this._processEffects(effects.onRowStart);
+                this._processEffects('onRowStart');
             }
 
             if(this._isStartOfTick()) {
-                this._processEffects(effects.onTickStart);
+                this._processEffects('onTickStart');
             }
         }
 
         this._fillBuffers(channelBuffers);
 
         if (!this._isDelayed() && this._isEndOfRow()) {
-            this._processEffects(effects.onRowEnd);
+            this._processEffects('onRowEnd');
         }
 
         if(this._isEndOfTick()) {
@@ -306,9 +306,9 @@ export default class Protracker extends Player {
     };
 
 
-    /*****************************
-     *     Private functions     *
-     *****************************/
+    // *****************************
+    // *     Private functions     *
+    // *****************************
 
     private _assignInstructionsToChannels(row: Instruction[]): void {
         this.channels.forEach((channel, index) => {
@@ -324,7 +324,7 @@ export default class Protracker extends Player {
                 channel.resetVolume();
             }
 
-            if(instruction.period && (!effects.isTonePortamento(instruction.effect))) {
+            if(instruction.period && (!isTonePortamento(instruction.effect))) {
                 channel.resetFineTune();
                 channel.setOriginalPeriod(instruction.period);
                 channel.resetSample();
@@ -414,11 +414,25 @@ export default class Protracker extends Player {
         return this.state.currentTickSamplePosition === 0;
     }
 
-    private _processEffects(effectProcessor: Function): void {
+    private _processEffects(eventName: string): void {
         this.channels.forEach(channel => {
             const channelEffect = channel.getEffect();
+            
             if(channelEffect) {
-                effectProcessor(this, this.state, channel);
+                switch(eventName) {
+                    case 'onRowStart': {
+                        channelEffect.onRowStart && channelEffect.onRowStart(this, channel);
+                        break;
+                    }
+                    case 'onRowEnd': {
+                        channelEffect.onRowEnd && channelEffect.onRowEnd(this, channel);
+                        break;
+                    }
+                    case 'onTickStart': {
+                        channelEffect.onTickStart && channelEffect.onTickStart(this, channel);
+                        break;
+                    }
+                }
             }
         });
     }

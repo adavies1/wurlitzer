@@ -85,6 +85,11 @@ export default class ProtrackerOscillator implements Oscillator {
     }
 }
 
+
+// *****************************
+// *     Utility functions     *
+// *****************************
+
 export const generateSawtoothWave : WaveGenerator = (rowPosition, offset = 0, oscillationsPerRow = 1, amplitude = 1) => {
     const position = ((rowPosition * oscillationsPerRow) + offset) % 1;
     return (1 - position) * amplitude;

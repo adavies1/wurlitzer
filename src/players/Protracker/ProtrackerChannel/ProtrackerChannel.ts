@@ -1,10 +1,12 @@
-import { EffectCode } from './models/EffectCode.interface';
-import { Instruction } from './models/Instruction.interface';
-import { Sample } from './models/Sample.interface';
-import ProtrackerOscillator from './ProtrackerOscillator';
+import { effectFactory } from '../effects/effectFactory';
+import { EffectCode } from '../models/EffectCode.interface';
+import { Instruction } from '../models/Instruction.interface';
+import { Sample } from '../models/Sample.interface';
+import ProtrackerOscillator from '../ProtrackerOscillator';
+import { applyVolumeToSample, getFineTunedPeriod, getFrequency, getNextSampleIncrement, getSampleIncrementValue, getSampleValue } from './utils';
 
 export type state = {
-    effect: EffectCode | undefined,
+    effect: ReturnType<typeof effectFactory>,
     fineTune: number,
     frequency: number,
     instruction: Instruction | undefined,
@@ -56,9 +58,9 @@ export default class ProtrackerChannel {
     };
 
 
-    /****************************
-     *     Public functions     *
-     ****************************/
+    // ****************************
+    // *     Public functions     *
+    // ****************************
 
     fillBuffer(buffer: Float32Array, bufferStart: number, samplesToGenerate: number): void {
         const end = Math.min(bufferStart + samplesToGenerate, buffer.length);
@@ -77,7 +79,11 @@ export default class ProtrackerChannel {
         }
     };
 
-    getEffect(): EffectCode | undefined {
+    getEffect() {
+        return this.state.effect;
+    };
+
+    getEffectCode(): EffectCode | undefined {
         return this.state.instruction ? this.state.instruction.effect : undefined;
     };
 
@@ -161,6 +167,7 @@ export default class ProtrackerChannel {
 
     setInstruction(instruction: Instruction): void {
         this.state.instruction = instruction;
+        this.state.effect = effectFactory(instruction.effect);
     }
 
     setOriginalPeriod(period: number): void {
@@ -200,73 +207,37 @@ export default class ProtrackerChannel {
     }
 
 
-    /*****************************
-     *     Private functions     *
-     *****************************/
+    // *****************************
+    // *     Private functions     *
+    // *****************************
 
-    _calculateFrequency(): void {
-        this.state.frequency = this.amigaClockSpeed / (this.state.period * 2);
+    private _calculateFrequency(): void {
+        this.state.frequency = getFrequency(this.amigaClockSpeed, this.state.period);
     };
 
-    _calculateFineTunedPeriod() {
-        const fineTune = this.state.fineTune || 0;
-        let period = this.state.originalPeriod;
-
-        if(fineTune !== 0) {
-            if (fineTune > 0) {
-                period = period / Math.pow(2, Math.abs(fineTune) / (8 * 12))
-            }
-            else {
-                period = period * Math.pow(2, Math.abs(fineTune) / (8 * 12))
-            }
-        }
-
-        this.state.fineTunedPeriod = period;
+    private _calculateFineTunedPeriod() {
+        this.state.fineTunedPeriod = getFineTunedPeriod(this.state.originalPeriod, this.state.fineTune);
     }
 
-    _calculateSampleIncrement(): void {
-        this.state.sampleIncrement = this.state.frequency / this.bufferFrequency;
+    private _calculateSampleIncrement(): void {
+        this.state.sampleIncrement = getSampleIncrementValue(this.state.frequency, this.bufferFrequency);
     };
 
-    _getSampleValue(): number {
+    private _getSampleValue(): number {
         if(this.state.sample && !this.state.sampleHasEnded) {
-            const fractionOfNextSample = this.state.samplePosition % 1;
-            const lowerSample = this.state.sample.audio[Math.floor(this.state.samplePosition)];
-            const upperSample = this.state.sample.audio[Math.ceil(this.state.samplePosition)];
-            const diff = upperSample - lowerSample;
-
-            return (lowerSample + (fractionOfNextSample * diff)) * (this.state.volume / 64);
+            const sample = getSampleValue(this.state.sample.audio, this.state.samplePosition);
+            return applyVolumeToSample(sample, this.state.volume);
         }
-        else {
-            return 0;
-        }
+        return 0;
     };
 
-    _incrementSamplePosition(): void {
+    private _incrementSamplePosition(): void {
         if(this.state.sample && !this.state.sampleHasEnded) {
-            let nextPosition = this.state.samplePosition + this.state.sampleIncrement;
-            let sampleEnd: number;
+            const { sample, samplePosition, sampleIncrement } = this.state;
+            const { nextPosition, sampleHasEnded } = getNextSampleIncrement(sample, samplePosition, sampleIncrement);
 
-            // The end of the sample is different depending on if the sample is now looping or not
-            if(this.state.sample.repeatLength > 2) {
-                sampleEnd = this.state.sample.repeatOffset + this.state.sample.repeatLength;
-            }
-            else {
-                sampleEnd = this.state.sample.length;
-            }
-
-            // Increment sample position
-            if(nextPosition < sampleEnd) {
-                this.state.samplePosition = nextPosition;
-            }
-            else {
-                if(this.state.sample.repeatLength > 2) {
-                    this.state.samplePosition = this.state.sample.repeatOffset + (nextPosition - sampleEnd);
-                }
-                else {
-                    this.state.sampleHasEnded = true;
-                }
-            }
+            this.state.samplePosition = nextPosition;
+            this.state.sampleHasEnded = sampleHasEnded;
         }
     };
 };

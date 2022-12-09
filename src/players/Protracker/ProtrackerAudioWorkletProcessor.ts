@@ -32,9 +32,11 @@ class ProtrackerAudioWorkletProcessor extends AudioWorkletProcessor {
 
     constructor(config: AudioWorkletNodeOptions = {}) {
         super(config);
+        const audioContext = (globalThis as unknown) as AudioContext; // hack as current scope isnt defined properly
+
         this.fileData = config.processorOptions.fileData;
-        this.player = new Protracker(((globalThis as unknown) as AudioContext) /* hack */, this.fileData);
-        this.port.onmessage = this.onMessage;
+        this.player = new Protracker(audioContext, this.fileData);
+        this.port.onmessage = this.onMessage.bind(this);
     }
 
     process (inputs:Float32Array[][], outputs:Float32Array[][], parameters:Record<string, Float32Array>) {
@@ -47,7 +49,7 @@ class ProtrackerAudioWorkletProcessor extends AudioWorkletProcessor {
         return notFinished;
     }
 
-    onMessage = (event: any) => {
+    onMessage (event: any) {
         switch(event.data.cmd) {
             case 'play':
                 this.player.play();
@@ -67,4 +69,4 @@ class ProtrackerAudioWorkletProcessor extends AudioWorkletProcessor {
     }
 }
 
-registerProcessor('protracker', ProtrackerAudioWorkletProcessor) /* hack - registerProcessor is global to AudioWorkletProcessor scope */
+registerProcessor('protracker', ProtrackerAudioWorkletProcessor) /* registerProcessor is global to AudioWorkletProcessor scope */

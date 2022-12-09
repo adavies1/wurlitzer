@@ -60,6 +60,10 @@ export function pickRandom(...params: any[]) {
     return params[randomInt(params.length)];
 }
 
+export function minMaxLimit(value: number, min: number, max: number) {
+    return Math.max(Math.min(value, max), min)
+}
+
 /**
  * Given a max of 3, it will return 0,1,2
  */

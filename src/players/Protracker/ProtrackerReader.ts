@@ -1,4 +1,3 @@
-import { EffectCode } from './models/EffectCode.interface';
 import { Instruction } from './models/Instruction.interface';
 import { Sample } from './models/Sample.interface';
 import { SampleHeader } from './models/SampleHeader.interface';
@@ -194,6 +193,7 @@ export function getPatterns(fileData: ArrayBuffer): Instruction[][][] {
                 if(top > 0 || bottom > 0) {
                     patterns[i][j][k].effect = {
                         code: top,
+                        extendedCode: `${top}${bottom === 14 ? `-${bottom >> 4}` : ''}`,
                         p:    bottom,
                         px:   (bottom >> 4),
                         py:   (bottom % 16)
