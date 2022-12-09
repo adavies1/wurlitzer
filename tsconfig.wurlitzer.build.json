@@ -1,5 +1,5 @@
 {
-    "extends": "tsconfig.wurlitzer.dev.json",
+    "extends": "./tsconfig.wurlitzer.dev.json",
     "compilerOptions": {
         "sourceMap": false,
         "inlineSourceMap": false,

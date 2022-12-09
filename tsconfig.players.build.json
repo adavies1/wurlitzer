@@ -1,5 +1,5 @@
 {
-    "extends": "tsconfig.players.dev.json",
+    "extends": "./tsconfig.players.dev.json",
     "compilerOptions": {
         "sourceMap": false,
     }
