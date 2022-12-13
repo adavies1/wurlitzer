@@ -415,7 +415,7 @@ export default class Protracker extends Player {
     }
 
     private _processEffects(eventName: string): void {
-        this.channels.forEach(channel => {
+        this.channels.forEach((channel, index) => {
             const channelEffect = channel.getEffect();
             
             if(channelEffect) {
@@ -440,7 +440,7 @@ export default class Protracker extends Player {
     private _setupChannels(channelCount: number): void {
         this.channels.length = 0;
         for(let i=0; i<channelCount; i++) {
-            this.channels.push(new ProtrackerChannel(this.audioContext.sampleRate, this.amigaClockSpeed));
+            this.channels.push(new ProtrackerChannel(i, this.audioContext.sampleRate, this.amigaClockSpeed));
         }
     };
 }

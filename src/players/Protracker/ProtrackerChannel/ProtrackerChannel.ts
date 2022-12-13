@@ -49,9 +49,11 @@ const getDefaultState = ():state => {
 export default class ProtrackerChannel {
     amigaClockSpeed: number;
     bufferFrequency: number;
+    id: number;
     state: state = getDefaultState();
 
-    constructor(bufferFrequency: number, amigaClockSpeed: number) {
+    constructor(id: number, bufferFrequency: number, amigaClockSpeed: number) {
+        this.id = id;
         this.amigaClockSpeed = amigaClockSpeed;
         this.bufferFrequency = bufferFrequency;
         this.reset();
@@ -90,6 +92,10 @@ export default class ProtrackerChannel {
     getFineTune(): number {
         return this.state.fineTune;
     };
+
+    getId() {
+        return this.id;
+    }
 
     getInstruction(): Instruction | undefined {
         return this.state.instruction;
