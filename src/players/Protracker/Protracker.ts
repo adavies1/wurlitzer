@@ -313,7 +313,6 @@ export default class Protracker extends Player {
     private _assignInstructionsToChannels(row: Instruction[]): void {
         this.channels.forEach((channel, index) => {
             const instruction = row[index];
-
             channel.setInstruction(instruction);
 
             if(instruction.sampleIndex) {
@@ -367,12 +366,9 @@ export default class Protracker extends Player {
         let nextPosition;
 
         if(this._isDelayed()) {
-            const delay = this.getPatternDelay() - 1;
-            this.setPatternDelay(delay);
-            if(delay !== -1) {
-                this.state.currentTickSamplePosition = 0;
-                return true;
-            }
+            this.setPatternDelay(this.getPatternDelay() - 1);
+            this.state.currentTickSamplePosition = 0;
+            return true;
         }
 
         nextPosition = (

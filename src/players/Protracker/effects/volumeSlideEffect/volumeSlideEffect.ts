@@ -8,7 +8,7 @@ export const volumeSlideEffect = (p1: number, p2: number): EffectProcessor => {
         const state = player.getPlaybackState();
 
         if(state.currentTick > 0) {
-            const newVolume = channel.getVolume() + p1 - p2;
+            const newVolume = p1 ? channel.getVolume() + p1 : channel.getVolume() - p2;
             channel.setVolume(minMaxLimit(newVolume, 0, 64));
         }
     }
