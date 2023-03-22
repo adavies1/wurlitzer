@@ -108,6 +108,7 @@ export class Wurlitzer {
 // Utility functions
 export function addAmigaMixer(audioContext: AudioContext, player: AudioWorkletNode): ChannelMergerNode {
     const mixer = new ChannelMergerNode(audioContext, { numberOfInputs: 2 });
+    const volume = audioContext.createGain();
 
     // If song has 4 channels, mimick amiga left/right split (LRRL)
     if(player.numberOfOutputs === 4) {
@@ -127,7 +128,14 @@ export function addAmigaMixer(audioContext: AudioContext, player: AudioWorkletNo
             .forEach(index => player.connect(mixer, index, 1));
     }
 
-    return mixer;
+    // The output is super loud as we just added all of the waves together without reducing them.
+    // Reduce volume to ((1 / channels) * 100)% to get back to sensible volume.
+    volume.gain.value = 1 / player.numberOfOutputs;
+
+    // Connect mixer to gain node (volume fixer)
+    mixer.connect(volume);
+
+    return volume;
 }
 
 export async function loadPlayer(fileData: ArrayBuffer, audioContext: AudioContext): Promise<AudioWorkletNode> {
