@@ -14,7 +14,7 @@ export function getChannelCount(fileData: ArrayBuffer): number {
 
     switch(signature) {
         case '8CHN':
-        case 'FLT8':
+        case 'FLT8': 
         case 'CD81':
         case 'OKTA':
         case 'OCTA':

@@ -17,7 +17,7 @@
         "declarationDir": "./",
         "noImplicitAny": true,
         "declaration": true,
-        "sourceMap": false,
+        "sourceMap": false
     },
     "include": ["src/index.ts"],
     "exclude": ["node_modules", "**/__tests__/*"]

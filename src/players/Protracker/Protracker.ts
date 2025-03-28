@@ -2,29 +2,15 @@ import * as protrackerConstants from './constants';
 import * as appConstants from '../../constants';
 
 import { Instruction } from './models/Instruction.interface';
-import { Sample } from './models/Sample.interface';
 
-import Player from "../Player/Player";
-import ProtrackerChannel from "./ProtrackerChannel/ProtrackerChannel";
+import { Player } from "../Player/Player";
+import { ProtrackerChannel } from "./ProtrackerChannel/ProtrackerChannel";
+import { ProtrackerInfo } from './models/ProtrackerInfo.interface';
 import * as reader from "./ProtrackerReader";
+
 import { isTonePortamento } from './effects/utils';
 
-// import { mergeChannelsToOutput } from '../../utils';
-
-export type Song = {
-    channelCount:    number;
-    patternCount:    number;
-    patterns:        Instruction[][][];
-    patternSequence: number[];
-    rowsPerPattern:  number,
-    samples:         Sample[];
-    signature:       string;
-    songLength:      number;
-    songLoop:        number | undefined;
-    title:           string;
-};
-
-export type State = {
+export type ProtrackerState = {
     currentBufferSamplePosition: number,
     currentPatternSequenceIndex: number,
     currentRowIndex:             number,
@@ -56,14 +42,14 @@ export const defaultState = {
     tempo:                       125,
 };
 
-export default class Protracker extends Player {
+export class Protracker extends Player {
     amigaClockSpeed     : number                = protrackerConstants.AMIGA_CLOCK_SPEED_PAL;
     channels            : ProtrackerChannel[]   = [];
-    song                : Song;
-    state               : State                 = {...defaultState};
+    song                : ProtrackerInfo;
+    state               : ProtrackerState       = {...defaultState};
 
     constructor(audioContext: AudioContext, fileData: ArrayBuffer) {
-        super(audioContext);
+        super(audioContext, fileData);
 
         // Get all of the read-only properties of the song from the file
         this.song = {
@@ -104,7 +90,7 @@ export default class Protracker extends Player {
         return this.state.patternLoopRowIndex;
     }
 
-    getPlaybackState(): State {
+    getPlaybackState(): ProtrackerState {
         return this.state
     };
 
@@ -117,7 +103,7 @@ export default class Protracker extends Player {
         return currentSamples / (this.state.speed * this.state.samplesPerTick);
     }
 
-    getSong(): Song {
+    getInfo(): ProtrackerInfo {
         return this.song;
     };
 
@@ -413,7 +399,7 @@ export default class Protracker extends Player {
     private _processEffects(eventName: string): void {
         this.channels.forEach((channel, index) => {
             const channelEffect = channel.getEffect();
-            
+
             if(channelEffect) {
                 switch(eventName) {
                     case 'onRowStart': {
@@ -440,3 +426,5 @@ export default class Protracker extends Player {
         }
     };
 }
+
+export default Protracker;

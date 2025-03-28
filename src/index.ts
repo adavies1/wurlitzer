@@ -1,1 +1,1 @@
-export { Wurlitzer } from './Wurlitzer';
+export { Wurlitzer } from './Wurlitzer/Wurlitzer';

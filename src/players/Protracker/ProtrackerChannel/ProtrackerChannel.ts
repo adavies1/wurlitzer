@@ -5,7 +5,7 @@ import { Sample } from '../models/Sample.interface';
 import ProtrackerOscillator from '../ProtrackerOscillator';
 import { applyVolumeToSample, getFineTunedPeriod, getFrequency, getNextSampleIncrement, getSampleIncrementValue, getSampleValue } from './utils';
 
-export type state = {
+export type ProtrackerChannelState = {
     effect: ReturnType<typeof effectFactory>,
     fineTune: number,
     frequency: number,
@@ -24,7 +24,7 @@ export type state = {
     volume: number
 }
 
-const getDefaultState = ():state => {
+const getDefaultState = (): ProtrackerChannelState => {
     return {
         effect: undefined,
         fineTune: 0,
@@ -46,11 +46,11 @@ const getDefaultState = ():state => {
 };
 
 
-export default class ProtrackerChannel {
+export class ProtrackerChannel {
     amigaClockSpeed: number;
     bufferFrequency: number;
     id: number;
-    state: state = getDefaultState();
+    state: ProtrackerChannelState = getDefaultState();
 
     constructor(id: number, bufferFrequency: number, amigaClockSpeed: number) {
         this.id = id;
@@ -247,3 +247,5 @@ export default class ProtrackerChannel {
         }
     };
 };
+
+export default ProtrackerChannel;

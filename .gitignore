@@ -3,5 +3,6 @@ node_modules
 /dist
 /lib
 *.d.ts
+!src/global.d.ts
 globals.js
 yarn-error.log

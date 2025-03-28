@@ -1,15 +1,10 @@
 import { getInitOptions as getProtrackerInitOptions } from '../players/Protracker/ProtrackerReader';
+import { PlayerInitInfo } from './models/PlayerInitInfo.interface';
+import { PlayerNames } from './constants';
 
-export interface PlayerInitInfo {
-    name: string,
-    getInitOptions: (fileData: ArrayBuffer) => AudioWorkletNodeOptions,
-    options: AudioWorkletNodeOptions,
-    path: string
-}
-
-const players:PlayerInitInfo[] = [
+const players: PlayerInitInfo[] = [
     {
-        name: 'protracker',
+        name: PlayerNames.PROTRACKER,
         getInitOptions: getProtrackerInitOptions,
         options: {},
         path: process.env.PUBLIC_URL + '/players/protracker.js'
