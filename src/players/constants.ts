@@ -1,3 +1,4 @@
 export enum PlayerNames {
-    PROTRACKER = 'protracker'
+    PROTRACKER = 'protracker',
+    QUARTET = 'quartet'
 }

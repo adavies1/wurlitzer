@@ -79,6 +79,10 @@ export function readBigEndian16bitInt(arrayBuffer: ArrayBuffer, offset: number) 
     return new DataView(arrayBuffer).getUint16(offset, false);
 };
 
+export function readBigEndian32bitInt(arrayBuffer: ArrayBuffer, offset: number) {
+    return new DataView(arrayBuffer).getUint32(offset, false);
+};
+
 export function readStringFromArrayBuffer(arrayBuffer: ArrayBuffer, start: number, end?: number) {
     return String.fromCharCode.apply(
         null,
