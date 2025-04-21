@@ -4,8 +4,9 @@ export function createAudioContext(): AudioContext {
         : globalThis as unknown as AudioContext;
 }
 
-export async function loadFile(source: string | File): Promise<ArrayBuffer> {
-    return (typeof source === 'string' ? loadFileFromUrl(source) : loadFileFromDisk(source))
+export function loadFiles(sources: (string | File)[]) {
+    const requests = sources.map(s => (typeof s === 'string' ? loadFileFromUrl(s) : loadFileFromDisk(s)));
+    return Promise.all(requests);
 }
 
 export function loadFileFromDisk(source: File): Promise<ArrayBuffer> {

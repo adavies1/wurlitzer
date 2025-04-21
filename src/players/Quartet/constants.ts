@@ -5,7 +5,7 @@ export enum ACTION {
     VOICECHANGE = 86, // V
     STARTLOOP = 108,  // l
     ENDLOOP = 76,     // L
-    ENDVOICE = 70,    // E
+    ENDVOICE = 70,    // F
 }
 
 export enum NOTES {

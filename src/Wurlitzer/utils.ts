@@ -33,7 +33,7 @@ export function addAmigaMixer(audioContext: AudioContext, player: AudioWorkletNo
     return volume;
 }
 
-export async function getFilePlayer(players: PlayerInitInfo[], fileData: ArrayBuffer, audioContext: AudioContext): Promise<AudioWorkletNode> {
+export async function getFilePlayer(players: PlayerInitInfo[], fileData: ArrayBuffer[], audioContext: AudioContext): Promise<AudioWorkletNode> {
     let requiredPlayer:PlayerInitInfo | undefined;
 
     players.forEach(player => {

@@ -14,7 +14,7 @@ export function getChannelCount(fileData: ArrayBuffer): number {
 
     switch(signature) {
         case '8CHN':
-        case 'FLT8': 
+        case 'FLT8':
         case 'CD81':
         case 'OKTA':
         case 'OCTA':
@@ -97,7 +97,8 @@ export function getFormatDescription(fileData: ArrayBuffer): string {
     Returns the data required to create a new AudioWorkletNode
     This allows the protracker playback code to be executed in its own thread
 */
-export function getInitOptions(fileData: ArrayBuffer): AudioWorkletNodeOptions {
+export function getInitOptions(fileDataArr: ArrayBuffer[]): AudioWorkletNodeOptions {
+    const fileData = fileDataArr[0];
     if(!isFileSupported(fileData)) throw new Error;
     const outputCount = getChannelCount(fileData)
     return {
@@ -365,5 +366,3 @@ function _getSampleHeader(sampleHeaderData: ArrayBuffer): SampleHeader {
         repeatLength: utils.readBigEndian16bitInt(sampleHeaderData, 28) * 2
     }
 };
-
-

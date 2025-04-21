@@ -1,12 +1,12 @@
 import * as utils from '../utils';
-import { loadFile } from '../utils';
+import { loadFiles } from '../utils';
 import { addAmigaMixer, getFilePlayer } from './utils';
 import players from '../players/players';
 
 export class Wurlitzer {
     audioContext: AudioContext;
     extraMessageHandler: (event: any) => void;
-    fileData: ArrayBuffer | undefined;
+    fileData: ArrayBuffer[] | undefined;
     mixer: ChannelMergerNode | undefined;
     player: AudioWorkletNode | undefined;
     connected: boolean = false;
@@ -21,8 +21,8 @@ export class Wurlitzer {
         this.player && this.player.port.postMessage({cmd: 'getInfo'});
     }
 
-    async load(source: string | File) {
-        const fileData = await loadFile(source);
+    async load(sources: (string | File)[]) {
+        const fileData = await loadFiles(sources);
         const player = await getFilePlayer(players, fileData, this.audioContext);
 
         this.stop();
