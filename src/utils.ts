@@ -68,7 +68,11 @@ export function minMaxLimit(value: number, min: number, max: number) {
 /**
  * Given a max of 3, it will return 0,1,2
  */
-export function randomInt(max: number): number {
+export function getByteAsHex(arrayBuffer: ArrayBuffer, offset: number) {
+    return new DataView(arrayBuffer).getUint8(offset).toString(16).toUpperCase();
+};
+
+export function randomInt(max: number) {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
@@ -80,8 +84,21 @@ export function readBigEndian16bitInt(arrayBuffer: ArrayBuffer, offset: number) 
     return new DataView(arrayBuffer).getUint16(offset, false);
 };
 
+export function readBigEndian24bitInt(arrayBuffer: ArrayBuffer, offset: number) {
+    const view = new DataView(arrayBuffer);
+    return view.getUint16(offset, false) + (65536 * view.getUint8(offset + 2));
+};
+
 export function readBigEndian32bitInt(arrayBuffer: ArrayBuffer, offset: number) {
     return new DataView(arrayBuffer).getUint32(offset, false);
+};
+
+export function readHexByte(arrayBuffer: ArrayBuffer, offset: number) {
+    return "0x" + getByteAsHex(arrayBuffer, offset);
+};
+
+export function readHexWord(arrayBuffer: ArrayBuffer, offset: number) {
+    return "0x" + getByteAsHex(arrayBuffer, offset) + getByteAsHex(arrayBuffer, offset + 1);
 };
 
 export function readStringFromArrayBuffer(arrayBuffer: ArrayBuffer, start: number, end?: number) {

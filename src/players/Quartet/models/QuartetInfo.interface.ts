@@ -4,6 +4,7 @@ import { Sample } from "./Sample.interface";
 
 export interface QuartetInfo extends PlayerInfo {
     barMeasurementNote: number;
+    bitsPerSample: number;
     frequency:  number;
     samples: Sample[];
     instructions: Instruction[][];
