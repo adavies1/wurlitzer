@@ -1,12 +1,11 @@
 import * as protrackerConstants from './constants';
 import * as appConstants from '../../constants';
 
-import { Instruction } from './models/Instruction.interface';
-
+import { Instruction } from '../../readers/ProtrackerReader/models/Instruction.interface';
 import { Player } from "../Player/Player";
 import { ProtrackerChannel } from "./ProtrackerChannel/ProtrackerChannel";
-import { ProtrackerInfo } from './models/ProtrackerInfo.interface';
-import * as reader from "./ProtrackerReader";
+import { ProtrackerReader } from "../../readers/ProtrackerReader/ProtrackerReader";
+import { ProtrackerReaderInfo } from '../../readers/ProtrackerReader/models/ProtrackerReaderInfo.interface';
 
 import { isTonePortamento } from './effects/utils';
 
@@ -45,26 +44,12 @@ export const defaultState = {
 export class Protracker extends Player {
     amigaClockSpeed     : number                = protrackerConstants.AMIGA_CLOCK_SPEED_PAL;
     channels            : ProtrackerChannel[]   = [];
-    song                : ProtrackerInfo;
+    song                : ProtrackerReaderInfo;
     state               : ProtrackerState       = {...defaultState};
 
     constructor(audioContext: AudioContext, fileData: ArrayBuffer) {
         super(audioContext, fileData);
-
-        // Get all of the read-only properties of the song from the file
-        this.song = {
-            channelCount:    reader.getChannelCount(fileData),
-            patternCount:    reader.getPatternCount(fileData),
-            patterns:        reader.getPatterns(fileData),
-            patternSequence: reader.getPatternSequence(fileData),
-            rowsPerPattern:  reader.getRowsPerPattern(fileData),
-            samples:         reader.getSamples(fileData, true),
-            signature:       reader.getSignature(fileData),
-            songLength:      reader.getUsedPatternSequenceLength(fileData),
-            songLoop:        reader.getSongLoopPatternSequenceIndex(fileData),
-            title:           reader.getTitle(fileData),
-        };
-
+        this.song = new ProtrackerReader(fileData).data!;
         this._setupChannels(this.song.channelCount);
         this.state.samplesPerTick = this._calculateSamplesPerTick();
     };
@@ -103,7 +88,7 @@ export class Protracker extends Player {
         return currentSamples / (this.state.speed * this.state.samplesPerTick);
     }
 
-    getInfo(): ProtrackerInfo {
+    getInfo(): ProtrackerReaderInfo {
         return this.song;
     };
 

@@ -41,6 +41,7 @@ export async function getFilePlayer(players: PlayerInitInfo[], fileData: ArrayBu
             requiredPlayer = {...player, options: player.getInitOptions(fileData)}
         }
         catch(e) {
+            console.log(e)
             // We get here if the player does not support the song (or something went wrong), continue to try other players
         }
     });

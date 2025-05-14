@@ -2,12 +2,17 @@ import { Instruction } from './models/Instruction.interface';
 import { Sample } from './models/Sample.interface';
 import { SampleHeader } from './models/SampleHeader.interface';
 
-import * as constants from './constants';
+import * as constants from '../../constants';
 import * as utils from '../../utils'
 
 /****************************
  *     Public functions     *
  ****************************/
+
+/**
+ * Returns the number of audio channels used by the given file
+ * @param fileData - ArrayBuffer of raw module data
+ */
 export function getChannelCount(fileData: ArrayBuffer): number {
     const signature = getSignature(fileData);
     let channelCount: number = 4;
@@ -41,6 +46,26 @@ export function getChannelCount(fileData: ArrayBuffer): number {
     return channelCount;
 };
 
+/**
+ * Will convert a raw integer into its finetune value (-7 <--> +7)
+ * @param rawInteger - Raw number to convert
+ */
+export function getFineTuneValue(rawInteger: number): number {
+    // Value:    0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
+    // Finetune: 0  +1  +2  +3  +4  +5  +6  +7  -8  -7  -6  -5  -4  -3  -2  -1
+
+    if(rawInteger >= 8)  {
+        return -16 + rawInteger
+    }
+    else {
+        return rawInteger;
+    }
+};
+
+/**
+ * Gets a brief file description (generally based upon file signature)
+ * @param fileData - ArrayBuffer of raw module data
+ */
 export function getFormatDescription(fileData: ArrayBuffer): string {
     const signature = getSignature(fileData);
     let type: string = constants.UNKNOWN_FORMAT;
@@ -93,30 +118,29 @@ export function getFormatDescription(fileData: ArrayBuffer): string {
     return type;
 };
 
-/*
-    Returns the data required to create a new AudioWorkletNode
-    This allows the protracker playback code to be executed in its own thread
-*/
+/**
+ * Returns the data required to create a new AudioWorkletNode.
+ * @param fileDataArr - array of ArrayBuffer of raw module data
+ */
 export function getInitOptions(fileDataArr: ArrayBuffer[]): AudioWorkletNodeOptions {
     const fileData = fileDataArr[0];
     if(!isFileSupported(fileData)) throw new Error;
     const outputCount = getChannelCount(fileData)
     return {
         numberOfOutputs: outputCount,
-        outputChannelCount: [...new Array(outputCount)].map(item => 1),
+        outputChannelCount: [...new Array(outputCount)].map(() => 1),
         processorOptions: {
             fileData: fileData
         }
     }
 }
 
-/*
-    This scans through the pattern sequence table to find the highest pattern index.
-    That is the number of patterns used by the module.
-
-    The song may not use all of these though, it may be that some patterns were edited,
-    but never intended to be played (imagine devs working to a deadline)
-*/
+/**
+ * Returns the highest pattern index in the pattern sequence table. This is the number
+ * of patterns used by the module. Please note that there can be orphan patterns in a file
+ * that were, for some reason, left behind.
+ * @param fileData - ArrayBuffer of raw module data
+ */
 export function getPatternCount(fileData: ArrayBuffer): number {
     const patternSequence = getPatternSequence(fileData);
 
@@ -124,6 +148,11 @@ export function getPatternCount(fileData: ArrayBuffer): number {
     return patternSequence.reduce((a,b) => Math.max(a,b)) + 1;
 };
 
+/**
+ * Reads and decodes all of the patterns and instructions for the song
+ * @param fileData - ArrayBuffer of raw module data
+ */
+export function getPatterns(fileData: ArrayBuffer): Instruction[][][] {
 /*
     This loads all of the pattern data into the pattern data array.
     The pattern data array is split up into single channel rows.
@@ -155,7 +184,6 @@ export function getPatternCount(fileData: ArrayBuffer): number {
     for 64 rows, then the next pattern has [ch4][ch5][ch6][ch7] for 64 rows. You then have
     to stick these back together.
 */
-export function getPatterns(fileData: ArrayBuffer): Instruction[][][] {
     const channelCount = getChannelCount(fileData);
     const patterns: Instruction[][][] = [];
     const start = 20 + (30*31) + 1 + 1 + 128 + 4;
@@ -207,6 +235,10 @@ export function getPatterns(fileData: ArrayBuffer): Instruction[][][] {
     return patterns;
 };
 
+/**
+ * Reads the pattern sequence from the given file data
+ * @param fileData - ArrayBuffer of raw module data
+ */
 export function getPatternSequence(fileData: ArrayBuffer): number[] {
     const patternSequenceData = fileData.slice(952, 1080);
 
@@ -231,6 +263,10 @@ export function getPatternSequence(fileData: ArrayBuffer): number[] {
     return patternSequence.slice(0, lastIndex + 1)
 };
 
+/**
+ * Returns the numbers of rows per pattern for the given file
+ * @param fileData - ArrayBuffer of raw module data
+ */
 export function getRowsPerPattern(fileData: ArrayBuffer): number {
     const signature = getSignature(fileData);
 
@@ -242,96 +278,12 @@ export function getRowsPerPattern(fileData: ArrayBuffer): number {
     }
 };
 
-export function getSampleCount(): number {
-    return 31;
-};
-
-export function getSamples(fileData: ArrayBuffer, addExtraEndSample: boolean = false): Sample[] {
-    const channelCount = getChannelCount(fileData);
-    const patternCount = getPatternCount(fileData);
-    const samples: Sample[] = [];
-
-    let audio;
-    let data;
-    let header;
-    let headerDataStartOffset = 20;
-    let sampleAudioStartOffset = 20 + (30*31) + 1 + 1 + 128 + 4 + (patternCount * 64 * channelCount * 4);
-    let sampleHeaderData;
-    let i;
-
-    // Run through and extract header and audio data for all samples
-    for(i=0; i<31; i++) {
-        // Each header is 30 bytes, extract them, then decode. Increment start offset position by 30 for next read.
-        sampleHeaderData = fileData.slice(headerDataStartOffset, headerDataStartOffset + 30);
-        header = _getSampleHeader(sampleHeaderData);
-        headerDataStartOffset = headerDataStartOffset + 30;
-
-        // Extract audio data - the length of the sample comes from the header
-        data = fileData.slice(sampleAudioStartOffset, sampleAudioStartOffset + header.length);
-        audio = _getSampleAudio(data, addExtraEndSample);
-        sampleAudioStartOffset = sampleAudioStartOffset + header.length;
-
-        // Concatenate and add to samples array
-        samples[i] = {
-            ...header,
-            audio
-        }
-    };
-
-    return samples;
-};
-
-export function getSignature(fileData: ArrayBuffer): string {
-    const headerStart = 20 + (30*31) + 1 + 1 + 128;
-    return utils.readStringFromArrayBuffer(fileData, headerStart, headerStart + 4);
-}
-
-export function getSongLoopPatternSequenceIndex(fileData: ArrayBuffer): number | undefined {
-    const start = 20 + (30*31) + 1;
-    const value = utils.read8bitInt(fileData, start)
-
-    // If value < 127, it signifies loop index. Otherwise, there is no loop (return undefined).
-    // return (value < 127) ? value : undefined;
-
-    // Oddly, it seems you should always return 0 for this...?
-    return 0;
-};
-
-export function getTitle(fileData: ArrayBuffer): string {
-    return utils.readStringFromArrayBuffer(fileData, 0, 20).replace(/\u0000/g, ' ').trim();
-};
-
-/*
-    This figure is the number of pattern sequence positions used by the song
-*/
-export function getUsedPatternSequenceLength(fileData: ArrayBuffer): number {
-    const start = 20 + (30*31);
-    return utils.read8bitInt(fileData, start);
-}
-
-export function isFileSupported(fileData: ArrayBuffer): boolean {
-    return getFormatDescription(fileData) !== constants.UNKNOWN_FORMAT;
-}
-
-
-/*****************************
- *     Private functions     *
- *****************************/
-
-/*
-    Value:    0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
-    Finetune: 0  +1  +2  +3  +4  +5  +6  +7  -8  -7  -6  -5  -4  -3  -2  -1
-*/
-function _getFineTuneValue(rawInteger: number): number {
-    if(rawInteger >= 8)  {
-        return -16 + rawInteger
-    }
-    else {
-        return rawInteger;
-    }
-};
-
-function _getSampleAudio(sampleData: ArrayBuffer, addExtraEndSample: boolean = false): Float32Array {
+/**
+ * Reads and converts the given sample data into a Float32 sample array
+ * @param sampleData - ArrayBuffer with raw sample data
+ * @param addExtraEndSample - Flag to add an extra (duplicated) sample to the end of the returned Float32 array
+ */
+export function getSampleAudio(sampleData: ArrayBuffer, addExtraEndSample: boolean = false): Float32Array {
     const float32Samples = new Float32Array(sampleData.byteLength + (addExtraEndSample ? 1 : 0));
     const view = new DataView(sampleData);
 
@@ -356,13 +308,113 @@ function _getSampleAudio(sampleData: ArrayBuffer, addExtraEndSample: boolean = f
     return float32Samples;
 };
 
-function _getSampleHeader(sampleHeaderData: ArrayBuffer): SampleHeader {
+/**
+ * Returns the number of samples in the file (this is fixed for protracker)
+ */
+export function getSampleCount(): number {
+    return 31;
+};
+
+/**
+ * Converts the given raw sample header data into decoded sample header data.
+ * @param sampleHeaderData - ArrayBuffer ffilled with raw sample header data
+ */
+export function getSampleHeader(sampleHeaderData: ArrayBuffer): SampleHeader {
     return {
         name:         utils.readStringFromArrayBuffer(sampleHeaderData, 0, 22),
         length:       utils.readBigEndian16bitInt(sampleHeaderData, 22) * 2,
-        fineTune:     _getFineTuneValue(utils.read8bitInt(sampleHeaderData, 24)),
+        fineTune:     getFineTuneValue(utils.read8bitInt(sampleHeaderData, 24)),
         volume:       Math.min(utils.read8bitInt(sampleHeaderData, 25), 64),
         repeatOffset: utils.readBigEndian16bitInt(sampleHeaderData, 26) * 2,
         repeatLength: utils.readBigEndian16bitInt(sampleHeaderData, 28) * 2
     }
 };
+
+/**
+ * Reads and decodes all of the samples from the given file data
+ * @param fileData - ArrayBuffer of raw module data
+ * @param addExtraEndSample - Flag to add an extra (duplicated) sample to the end of each samples returned Float32 array
+ */
+export function getSamples(fileData: ArrayBuffer, addExtraEndSample: boolean = false): Sample[] {
+    const channelCount = getChannelCount(fileData);
+    const patternCount = getPatternCount(fileData);
+    const samples: Sample[] = [];
+
+    let audio;
+    let data;
+    let header;
+    let headerDataStartOffset = 20;
+    let sampleAudioStartOffset = 20 + (30*31) + 1 + 1 + 128 + 4 + (patternCount * 64 * channelCount * 4);
+    let sampleHeaderData;
+    let i;
+
+    // Run through and extract header and audio data for all samples
+    for(i=0; i<31; i++) {
+        // Each header is 30 bytes, extract them, then decode. Increment start offset position by 30 for next read.
+        sampleHeaderData = fileData.slice(headerDataStartOffset, headerDataStartOffset + 30);
+        header = getSampleHeader(sampleHeaderData);
+        headerDataStartOffset = headerDataStartOffset + 30;
+
+        // Extract audio data - the length of the sample comes from the header
+        data = fileData.slice(sampleAudioStartOffset, sampleAudioStartOffset + header.length);
+        audio = getSampleAudio(data, addExtraEndSample);
+        sampleAudioStartOffset = sampleAudioStartOffset + header.length;
+
+        // Concatenate and add to samples array
+        samples[i] = {
+            ...header,
+            audio
+        }
+    };
+
+    return samples;
+};
+
+/**
+ * Returns the file signature from the given file data
+ * @param fileData - ArrayBuffer of raw module data
+ */
+export function getSignature(fileData: ArrayBuffer): string {
+    const headerStart = 20 + (30*31) + 1 + 1 + 128;
+    return utils.readStringFromArrayBuffer(fileData, headerStart, headerStart + 4);
+}
+
+/**
+ * Returns the pattern sequence index (position in the sequence) if one has been set, otherwise returns 0 (start).
+ * @param fileData - ArrayBuffer of raw module data
+ */
+export function getSongLoopPatternSequenceIndex(fileData: ArrayBuffer): number | undefined {
+    const start = 20 + (30*31) + 1;
+    const value = utils.read8bitInt(fileData, start)
+
+    // If value < 127, it signifies loop index. Otherwise, there is no loop (return undefined).
+    // return (value < 127) ? value : undefined;
+
+    // Oddly, it seems you should always return 0 for this...?
+    return 0;
+};
+
+/**
+ * Returns the title of the song
+ * @param fileData - ArrayBuffer of raw module data
+ */
+export function getTitle(fileData: ArrayBuffer): string {
+    return utils.readStringFromArrayBuffer(fileData, 0, 20).replace(/\u0000/g, ' ').trim();
+};
+
+/**
+ * Returns the the number of pattern sequence positions used by the song
+ * @param fileData - ArrayBuffer of raw module data
+ */
+export function getUsedPatternSequenceLength(fileData: ArrayBuffer): number {
+    const start = 20 + (30*31);
+    return utils.read8bitInt(fileData, start);
+}
+
+/**
+ * Returns true or false depending on if the file data is supported by this reader
+ * @param fileData - ArrayBuffer of raw module data
+ */
+export function isFileSupported(fileData: ArrayBuffer): boolean {
+    return getFormatDescription(fileData) !== constants.UNKNOWN_FORMAT;
+}

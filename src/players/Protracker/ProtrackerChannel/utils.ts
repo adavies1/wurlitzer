@@ -1,4 +1,4 @@
-import { Sample } from "../models/Sample.interface";
+import { Sample } from "../../../readers/ProtrackerReader/models/Sample.interface";
 
 /**
  * Applies the given volume to a sample

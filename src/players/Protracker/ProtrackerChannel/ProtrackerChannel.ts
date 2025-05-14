@@ -1,8 +1,8 @@
 import { effectFactory } from '../effects/effectFactory';
-import { EffectCode } from '../models/EffectCode.interface';
-import { Instruction } from '../models/Instruction.interface';
-import { Sample } from '../models/Sample.interface';
-import ProtrackerOscillator from '../ProtrackerOscillator';
+import { EffectCode } from '../../../readers/ProtrackerReader/models/EffectCode.interface';
+import { Instruction } from '../../../readers/ProtrackerReader/models/Instruction.interface';
+import { Sample } from '../../../readers/ProtrackerReader/models/Sample.interface';
+import ProtrackerOscillator from '../ProtrackerOscillator/ProtrackerOscillator';
 import { applyVolumeToSample, getFineTunedPeriod, getFrequency, getNextSampleIncrement, getSampleIncrementValue, getSampleValue } from './utils';
 
 export type ProtrackerChannelState = {

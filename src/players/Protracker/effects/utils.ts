@@ -1,6 +1,6 @@
 import { EFFECT_CODES, WAVE_TYPES } from "../constants";
-import { EffectCode } from "../models/EffectCode.interface";
-import ProtrackerOscillator from "../ProtrackerOscillator";
+import { EffectCode } from "../../../readers/ProtrackerReader/models/EffectCode.interface";
+import ProtrackerOscillator from "../ProtrackerOscillator/ProtrackerOscillator";
 
 export function isTonePortamento(effect: EffectCode | undefined) {
     if (!effect) return false;

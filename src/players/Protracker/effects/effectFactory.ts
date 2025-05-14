@@ -1,5 +1,5 @@
 import { EFFECT_CODES } from "../constants";
-import { EffectCode } from "../models/EffectCode.interface";
+import { EffectCode } from "../../../readers/ProtrackerReader/models/EffectCode.interface";
 
 import arpeggioEffect from "./arpeggioEffect/arpeggioEffect";
 import finePortamentoDownEffect from "./finePortamentoDownEffect/finePortamentoDownEffect";

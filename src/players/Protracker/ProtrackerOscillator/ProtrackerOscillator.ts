@@ -1,7 +1,8 @@
-import { Oscillator } from './models/Oscillator.interface';
-import { WaveGenerator } from './models/WaveGenerator.interface';
-import { WaveType } from './models/WaveType.interface';
-import { pickRandom } from '../../utils';
+import { Oscillator } from '../models/Oscillator.interface';
+import { WaveGenerator } from '../models/WaveGenerator.interface';
+import { WaveType } from '../models/WaveType.interface';
+import { pickRandom } from '../../../utils';
+import * as utils from './utils';
 
 export default class ProtrackerOscillator implements Oscillator {
     amplitude: number = 1;
@@ -9,7 +10,7 @@ export default class ProtrackerOscillator implements Oscillator {
     originalValue: number = 0;
     oscillationsPerRow: number = 1;
     retrigger: boolean = false;
-    waveGenerator: WaveGenerator = generateSineWave;
+    waveGenerator: WaveGenerator = utils.generateSineWave;
 
     getAmplitude() {
         return this.amplitude;
@@ -73,33 +74,14 @@ export default class ProtrackerOscillator implements Oscillator {
                 this.setWaveGenerator(pickRandom('sawtooth', 'sine', 'square'));
                 break;
             case 'sawtooth':
-                this.waveGenerator = generateSawtoothWave;
+                this.waveGenerator = utils.generateSawtoothWave;
                 break;
             case 'sine':
-                this.waveGenerator = generateSineWave;
+                this.waveGenerator = utils.generateSineWave;
                 break;
             case 'square':
-                this.waveGenerator = generateSquareWave;
+                this.waveGenerator = utils.generateSquareWave;
                 break;
         }
     }
-}
-
-
-// *****************************
-// *     Utility functions     *
-// *****************************
-
-export const generateSawtoothWave : WaveGenerator = (rowPosition, offset = 0, oscillationsPerRow = 1, amplitude = 1) => {
-    const position = ((rowPosition * oscillationsPerRow) + offset) % 1;
-    return (1 - position) * amplitude;
-}
-
-export const generateSineWave : WaveGenerator = (rowPosition, offset = 0, oscillationsPerRow = 1, amplitude = 1) => {
-    return Math.sin(((rowPosition * oscillationsPerRow) + offset) * 2 * Math.PI ) * amplitude;
-}
-
-export const generateSquareWave : WaveGenerator = (rowPosition, offset = 0, oscillationsPerRow = 1, amplitude = 1) => {
-    const position = ((rowPosition * oscillationsPerRow) + offset) % 1;
-    return (position < 0.5 ? 1 : -1) * amplitude;
 }

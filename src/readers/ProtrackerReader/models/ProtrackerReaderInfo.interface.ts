@@ -1,8 +1,8 @@
-import { PlayerInfo } from "../../Player/models/PlayerInfo.interface";
 import { Instruction } from "./Instruction.interface";
+import { ReaderInfo } from "../../ReaderInfo.interface";
 import { Sample } from "./Sample.interface";
 
-export interface ProtrackerInfo extends PlayerInfo {
+export interface ProtrackerReaderInfo extends ReaderInfo {
     channelCount:    number;
     patternCount:    number;
     patterns:        Instruction[][][];

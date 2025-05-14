@@ -43,5 +43,3 @@ export const EFFECT_CODES = {
 };
 
 export const WAVE_TYPES: WaveType[] = ['sine', 'sawtooth', 'square', 'random']; // Do not re-order!
-
-export const UNKNOWN_FORMAT = 'Unknown format';

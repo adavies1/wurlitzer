@@ -4,3 +4,5 @@ export enum PlayerStatus {
     PLAYING = 'PLAYING',
     ERROR = 'ERROR',
 }
+
+export const UNKNOWN_FORMAT = 'Unknown format';
