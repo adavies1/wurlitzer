@@ -1,8 +1,8 @@
-import { PlayerInfo } from "../../Player/models/PlayerInfo.interface";
 import { Instruction } from "./Instruction.interface";
+import { ReaderInfo } from "../../ReaderInfo.interface";
 import { Sample } from "./Sample.interface";
 
-export interface QuartetInfo extends PlayerInfo {
+export interface QuartetReaderInfo extends ReaderInfo {
     barMeasurementNote: number;
     bitsPerSample: number;
     frequency:  number;

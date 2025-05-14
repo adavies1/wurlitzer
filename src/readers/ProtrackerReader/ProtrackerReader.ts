@@ -1,11 +1,13 @@
 import { ProtrackerReaderInfo } from './models/ProtrackerReaderInfo.interface';
+import { UNSUPPORTED_FILE } from '../../constants';
 import * as utils from './utils'
 
 export class ProtrackerReader {
     data?: ProtrackerReaderInfo;
 
-    constructor(fileData: ArrayBuffer) {
-        if(utils.isFileSupported(fileData)) {
+    constructor(fileDataArr: ArrayBuffer[]) {
+        if(utils.isFileSupported(fileDataArr)) {
+            const fileData = fileDataArr[0];
             this.data = {
                 channelCount:    utils.getChannelCount(fileData),
                 patternCount:    utils.getPatternCount(fileData),
@@ -19,7 +21,7 @@ export class ProtrackerReader {
                 title:           utils.getTitle(fileData),
             };
         } else {
-            throw new Error('File not supported')
+            throw new Error(UNSUPPORTED_FILE)
         }
     }
 }

@@ -6,3 +6,4 @@ export enum PlayerStatus {
 }
 
 export const UNKNOWN_FORMAT = 'Unknown format';
+export const UNSUPPORTED_FILE = 'Unsupported file';

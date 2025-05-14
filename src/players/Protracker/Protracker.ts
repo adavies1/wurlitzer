@@ -49,7 +49,7 @@ export class Protracker extends Player {
 
     constructor(audioContext: AudioContext, fileData: ArrayBuffer) {
         super(audioContext, fileData);
-        this.song = new ProtrackerReader(fileData).data!;
+        this.song = new ProtrackerReader([fileData]).data!;
         this._setupChannels(this.song.channelCount);
         this.state.samplesPerTick = this._calculateSamplesPerTick();
     };

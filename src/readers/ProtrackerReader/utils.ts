@@ -119,23 +119,6 @@ export function getFormatDescription(fileData: ArrayBuffer): string {
 };
 
 /**
- * Returns the data required to create a new AudioWorkletNode.
- * @param fileDataArr - array of ArrayBuffer of raw module data
- */
-export function getInitOptions(fileDataArr: ArrayBuffer[]): AudioWorkletNodeOptions {
-    const fileData = fileDataArr[0];
-    if(!isFileSupported(fileData)) throw new Error;
-    const outputCount = getChannelCount(fileData)
-    return {
-        numberOfOutputs: outputCount,
-        outputChannelCount: [...new Array(outputCount)].map(() => 1),
-        processorOptions: {
-            fileData: fileData
-        }
-    }
-}
-
-/**
  * Returns the highest pattern index in the pattern sequence table. This is the number
  * of patterns used by the module. Please note that there can be orphan patterns in a file
  * that were, for some reason, left behind.
@@ -413,8 +396,8 @@ export function getUsedPatternSequenceLength(fileData: ArrayBuffer): number {
 
 /**
  * Returns true or false depending on if the file data is supported by this reader
- * @param fileData - ArrayBuffer of raw module data
+ * @param fileData - Array of ArrayBuffer of raw module data
  */
-export function isFileSupported(fileData: ArrayBuffer): boolean {
-    return getFormatDescription(fileData) !== constants.UNKNOWN_FORMAT;
+export function isFileSupported(fileDataArr: ArrayBuffer[]): boolean {
+    return getFormatDescription(fileDataArr[0]) !== constants.UNKNOWN_FORMAT;
 }
